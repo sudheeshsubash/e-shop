@@ -1,17 +1,24 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
-from .serializers import ShopDetailsRegisterSerializer,ShopDetailsLoginSerializer
-from admin_app1.tokens_permissions import get_tokens_for_user,CustomShopAdminPermission
+from .serializers import ShopDetailsRegisterSerializer,ShopDetailsLoginSerializer,CreateShopStaffSerializer
+from admin_app1.tokens_permissions import get_tokens_for_user,get_decoded_payload,CustomShopAdminPermission
 from admin_app1.otp import otp
-from .models import ShopDetails
+from .models import ShopDetails,ShopStaff
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
+from rest_framework import status
+from admin_app1.models import CustomUser
+
 
 
 
 
 @api_view(['POST','GET'])
 def register_eshop_admin(request):
+    '''
+    eshop admin registration
+    with otp validations
+    '''
     if request.method == 'POST':
         serializer = ShopDetailsRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -30,6 +37,8 @@ def register_eshop_admin(request):
         return Response({"msg":"input data is not valid"})
 
     if request.method == 'GET':
+        if not 'otpnumber' in request.session:
+            return Response({'msg':'you canot run this request now'})
         query_otp = request.query_params
         if int(query_otp.get('otp'))==request.session['otpnumber']:
             shop = ShopDetails.objects.create(
@@ -52,7 +61,9 @@ def register_eshop_admin(request):
 
 @api_view(['POST'])
 def login_eshop_admin(request):
-
+    '''
+    login eshop admin
+    '''
     if request.method == 'POST':
         serializer = ShopDetailsLoginSerializer(request.data)
         if serializer.validate():
@@ -68,9 +79,71 @@ def login_eshop_admin(request):
 
 
 
+@api_view(['POST'])
+@permission_classes([CustomShopAdminPermission])
+def create_shop_staff(request):
+    '''
+    shopadmin can create new shop staff id
+    '''
+    if request.method == 'POST':
+        staffserializer = CreateShopStaffSerializer(data=request.data)
+        if staffserializer.is_valid(raise_exception=True):
+            payload = get_decoded_payload(request)
+            staff = staffserializer.save(payload["user_id"])
+            return Response({"msg":f'{staff}'},status=status.HTTP_200_OK)
+        return Response({'error':'credentials is not valid'},status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 @api_view(['GET'])
 @permission_classes([CustomShopAdminPermission])
-def logout_eshop_admin(request):
-    # request.session.flush()
-    return Response({'msg':'logout'})
+def block_shop_staff(request,id):
+    '''
+    block shop staff
+    '''
+    if request.method == 'GET':
+        staff = ShopStaff.objects.get(id=id)
+        staff.is_active = False
+        staff.save()
+        return Response({'msg':f"{staff} is blocked"})
+    
+
+
+@api_view(['GET'])
+@permission_classes([CustomShopAdminPermission])
+def un_block_shop_staff(request,id):
+    '''
+    unblock shop staff
+    '''
+    if request.method == 'GET':
+        staff = ShopStaff.objects.get(id=id)
+        staff.is_active = True
+        staff.save()
+        return Response({'msg':f"{staff} is unblocked"})
+    
+
+@api_view(['GET'])
+@permission_classes([CustomShopAdminPermission])
+def block_end_user(request,id):
+    '''
+    block end user
+    '''
+    if request.method == 'GET':
+        enduser = CustomUser.objects.get(id=id)
+        enduser.is_active = False
+        enduser.save()
+        return Response({"msg":f" {enduser} blocked"})
+    
+
+
+@api_view(['GET'])
+@permission_classes([CustomShopAdminPermission])
+def un_block_end_user(request,id):
+    '''
+    unblock enduser
+    '''
+    if request.method == 'GET':
+        enduser = CustomUser.objects.get(id=id)
+        enduser.is_active = True
+        enduser.save()
+        return Response({"msg":f" {enduser} unblocked"})

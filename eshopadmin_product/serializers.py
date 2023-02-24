@@ -5,7 +5,9 @@ import re
 
 
 class ShopCategorySerializers(serializers.ModelSerializer):
-
+    '''
+    add new data in shopcategory table
+    '''
     class Meta:
         model = ShopCategorys
         fields = '__all__'
@@ -18,8 +20,9 @@ class ShopCategorySerializers(serializers.ModelSerializer):
 
 
 class ShopProductSerializers(serializers.ModelSerializer):
-
-
+    '''
+    add new product in shoopproduct table
+    '''
     class Meta:
         model = ShopProducts
         fields = [
@@ -44,14 +47,34 @@ class ShopProductSerializers(serializers.ModelSerializer):
 
 
 
-class UpdateShopProductSerializers(serializers.ModelSerializer):
-
+class UpdateShopProductDetails(serializers.ModelSerializer):
+    '''
+    update name price etc like 
+    fields for shopproduct table
+    '''
     class Meta:
         model = ShopProducts
         fields = [
             'name','price','stock','is_available',
-            'category_id','image1','image2'
+            'category_id'
         ]
+
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
     
+
+
+class UpdateShopProductImages(serializers.ModelSerializer):
+    '''
+    update images
+    '''
+    class Meta:
+        model = ShopProducts
+        fields = [
+            'image1','image2'
+        ]
+
+
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)

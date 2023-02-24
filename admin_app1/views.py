@@ -6,12 +6,14 @@ from django.contrib.auth import authenticate
 from .tokens_permissions import get_tokens_for_user,CustomAdminPermission
 from rest_framework import status
 from .paginations import CustomPageNumberPagination
+from eshopadmin_app1.models import ShopDetails
+
 
 @api_view(['GET'])
 @permission_classes([CustomAdminPermission])
 def custome_user_view(request):
     '''
-    
+    admin can view all shops
     '''
     if request.method == 'GET':
         '''
@@ -42,3 +44,24 @@ def login(request):
                 token = get_tokens_for_user(user=user)
                 return Response({"token":token,"msg":"login success"},status=status.HTTP_200_OK)
         return Response({"msg":"username and passwor is not currect"},status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+@permission_classes([CustomAdminPermission])
+def block_shop(request,id):
+    if request.method == 'GET':
+        shop = ShopDetails.objects.get(id=id)
+        shop.is_active = False
+        shop.save()
+        return Response({'msg':f'{shop} is blocked'})
+
+
+@api_view(['GET'])
+@permission_classes([CustomAdminPermission])
+def un_block_shop(request,id):
+    if request.method == 'GET':
+        shop = ShopDetails.objects.get(id=id)
+        shop.is_active = True
+        shop.save()
+        return Response({'msg':f'{shop} is unblocked'})

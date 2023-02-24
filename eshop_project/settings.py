@@ -43,10 +43,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_filters',
 
     'admin_app1.apps.AdminApp1Config',
     'eshopadmin_app1.apps.EshopadminApp1Config',
     'eshopadmin_product.apps.EshopadminProductConfig',
+    'shop_staff.apps.ShopStaffConfig',
+    'enduser_app1.apps.EnduserApp1Config',
+    'enduser_product.apps.EnduserProductConfig',
 
 
 ]

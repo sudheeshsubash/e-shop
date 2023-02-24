@@ -7,3 +7,8 @@ class ShopDetails(CustomUser):
     address = models.CharField(max_length=100,null=True)
     varify = models.BooleanField(default=True)
     ownername = models.CharField(max_length=30)
+
+
+
+class ShopStaff(CustomUser):
+    shop_id = models.ForeignKey("eshopadmin_app1.ShopDetails", on_delete=models.CASCADE,null=False)
