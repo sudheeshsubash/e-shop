@@ -1,5 +1,6 @@
 from admin_app1.models import CustomUser
 from eshopadmin_app1.models import ShopDetails
+from eshopadmin_product.models import ShopProducts
 from rest_framework import serializers
 import re
 
@@ -31,21 +32,20 @@ class EndUserLoginSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['username','password']
 
-    def validate(self, attrs):
-        username = attrs.get('username')
-        password = attrs.get('password')
+    def validate(self):
+        username = self.data.get('username')
+        password = self.data.get('password')
         if len(username)<= 0 or len(password)<= 0:
             raise serializers.ValidationError('username and password required')
         if not re.match("^[a-zA-Z]+$",username) or len(username)<4 or len(username)>20:
             raise serializers.ValidationError('User Name is not valid')
         if not re.match('^[a-zA-Z0-9]+$',password) or len(password) <4 or len(password)>20:
             raise serializers.ValidationError('password is not valid')
-        return attrs
+        return True
     
 
 
-class EndUserViewProducts(serializers.ModelSerializer):
+class EndUserViewShop(serializers.ModelSerializer):
     class Meta:
         model = ShopDetails
         fields = '__all__'
-

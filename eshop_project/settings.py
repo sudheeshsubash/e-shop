@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'shop_staff.apps.ShopStaffConfig',
     'enduser_app1.apps.EnduserApp1Config',
     'enduser_product.apps.EnduserProductConfig',
+    'enduser_orders.apps.EnduserOrdersConfig',
 
 
 ]

@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
-from .serializers import EndUserRegistrationSerializers,EndUserLoginSerializer,EndUserViewProducts
+from .serializers import EndUserRegistrationSerializers,EndUserLoginSerializer,EndUserViewShop
 from admin_app1.otp import otp
 from admin_app1.models import CustomUser
 from eshopadmin_app1.models import ShopDetails
@@ -10,6 +10,8 @@ from admin_app1.tokens_permissions import get_tokens_for_user,CustomEndUserPermi
 from rest_framework import filters
 from django_filters import rest_framework as filters
 from admin_app1.paginations import CustomPageNumberPagination
+from eshopadmin_product.models import ShopProducts
+
 
 
 
@@ -59,7 +61,7 @@ def login_end_user(request):
     token and shop base token
     '''
     loginserializer = EndUserLoginSerializer(request.data)
-    if loginserializer.is_valid(raise_exception=True):
+    if loginserializer.validate():
         enduser = authenticate(username=loginserializer.data.get('username'),password=loginserializer.data.get('password'))
         if enduser is not None:
             token = get_tokens_for_user(user=enduser)
@@ -89,5 +91,7 @@ def view_all_shops_details(request):
     user_queryset = ShopDetails.objects.all()
     user_filter = UserFilter(request.query_params, queryset=user_queryset)
     result = pagination.paginate_queryset(user_filter.qs,request)
-    serializer = EndUserViewProducts(result, many=True)
+    serializer = EndUserViewShop(result, many=True)
     return pagination.get_paginated_response(serializer.data)
+
+
