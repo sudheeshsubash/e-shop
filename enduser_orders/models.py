@@ -14,11 +14,13 @@ payment_choice = (
 
 class EndUserOrders(models.Model):
     '''
-    
+    EndUser Orders
     '''
     shop = models.ForeignKey("eshopadmin_app1.ShopDetails", on_delete=models.CASCADE,related_name='shop')
     user = models.ForeignKey("admin_app1.CustomUser", on_delete=models.CASCADE,related_name='user')
-    staff = models.ForeignKey("eshopadmin_app1.ShopStaff", on_delete=models.CASCADE,related_name='staff')
+    staff = models.ForeignKey("eshopadmin_app1.ShopStaff", on_delete=models.CASCADE,related_name='staff',null=True)
+    payment_id = models.CharField(max_length=25,null=True)
+    order_id = models.CharField(max_length=25,null=True)
     amount = models.IntegerField()
     status = models.CharField(max_length=20,choices=status_choice)
     payment_type = models.CharField(max_length=20,choices=payment_choice)
@@ -27,10 +29,12 @@ class EndUserOrders(models.Model):
 
 
 class OrderProducts(models.Model):
+    '''
+    Orders Product list
+    '''
     order = models.ForeignKey("enduser_orders.EndUserOrders", on_delete=models.CASCADE,related_name='order')
+    product = models.ForeignKey("eshopadmin_product.ProductImages", on_delete=models.CASCADE)
     product_name = models.CharField(max_length=30)
     product_price = models.IntegerField()
-    product_image1 = models.ImageField(upload_to='order/', max_length=200)
-    product_image2 = models.ImageField(upload_to='order/', max_length=200)
     quantity = models.IntegerField()
     total = models.IntegerField()

@@ -18,3 +18,10 @@ class ShopProducts(models.Model):
     image2 = models.ImageField(upload_to='images/', max_length=200)
     shop_id = models.ForeignKey("eshopadmin_app1.ShopDetails", on_delete=models.CASCADE)
     category_id = models.ForeignKey("eshopadmin_product.ShopCategorys", on_delete=models.CASCADE)
+
+
+
+
+class ProductImages(models.Model):
+    product = models.ForeignKey("eshopadmin_product.ShopProducts", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='images/', max_length=200)

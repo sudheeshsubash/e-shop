@@ -82,8 +82,7 @@ class CreateShopStaffSerializer(serializers.ModelSerializer):
 
     def save(self,shop_id):
         
-        print(shop_id)
-        print(self.data.get('username'))
+
         return ShopStaff.objects.create(
             username = self.data.get('username'),
             password = make_password(self.data.get('password')),

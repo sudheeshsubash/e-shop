@@ -108,6 +108,14 @@ DATABASES = {
 }
 
 
+# login url
+LOGIN_URL = 'http://127.0.0.1:8000/eshopadmin/login/'
+
+
+RAZOR_KEY_ID = 'rzp_test_4HjOMIihE6753m'
+RAZOR_KEY_SECRET = 'iQpYLgAzjV8fjB7UulrmXINv'
+
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 

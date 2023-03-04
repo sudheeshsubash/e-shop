@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ShopCategorys,ShopProducts
+from .models import ShopCategorys,ShopProducts,ProductImages
 import re
 
 
@@ -19,6 +19,7 @@ class ShopCategorySerializers(serializers.ModelSerializer):
         return attrs
 
 
+
 class ShopProductSerializers(serializers.ModelSerializer):
     '''
     add new product in shoopproduct table
@@ -26,8 +27,7 @@ class ShopProductSerializers(serializers.ModelSerializer):
     class Meta:
         model = ShopProducts
         fields = [
-            'name','price','stock','image1',
-            'image2','category_id' 
+            'name','price','stock','category_id'
         ]
     
     def save(self,shop_id):
@@ -35,8 +35,6 @@ class ShopProductSerializers(serializers.ModelSerializer):
             name = self.data.get('name'),
             price = self.data.get('price'),
             stock = self.data.get('stock'),
-            image1 = self.validated_data.get('image1'),
-            image2 = self.validated_data.get('image2'),
             shop_id_id = shop_id,
             category_id_id = self.data.get('category_id')
         )
@@ -65,16 +63,16 @@ class UpdateShopProductDetails(serializers.ModelSerializer):
     
 
 
-class UpdateShopProductImages(serializers.ModelSerializer):
+
+class AddProductImagesSerializer(serializers.Serializer):
     '''
     update images
     '''
-    class Meta:
-        model = ShopProducts
-        fields = [
-            'image1','image2'
-        ]
+    image = serializers.ListField(child=serializers.ImageField())
 
-
-    def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
+    def save(self, image, productid):
+        
+        return ProductImages.objects.create(
+            image = image,
+            product_id = productid.id
+        )

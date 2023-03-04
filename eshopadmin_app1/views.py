@@ -8,8 +8,10 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from rest_framework import status
 from admin_app1.models import CustomUser
-
-
+from django.contrib.auth import login,logout
+from django.contrib.auth.decorators import login_required
+from rest_framework.views import APIView
+from eshopadmin_product.models import ShopProducts
 
 
 
@@ -70,22 +72,39 @@ def login_eshop_admin(request):
             username = serializer.data.get('username')
             password = serializer.data.get('password')
             shopadmin = authenticate(username=username,password=password)
+            print(shopadmin)
             if shopadmin is not None:
-                token = get_tokens_for_user(user=shopadmin)
-                # request.session['shopadmin']=shopadmin
-                return Response({'token':token,'msg':'login success session start'})
-            return Response({'msg':"username and password is not currect"})
+                    token = get_tokens_for_user(user=shopadmin)
+                    # login(request,shopadmin)
+                    return Response({'token':token,'msg':'login success session start'})
+            return Response({'msg':'username and password is not currect'})
+            
 
 
 
-
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([CustomShopAdminPermission])
-def create_shop_staff(request):
+@login_required
+def logout_eshop_admin(request):
     '''
-    shopadmin can create new shop staff id
+    logout
     '''
-    if request.method == 'POST':
+    # logout(request)
+    return Response({'msg':'logout successfully'})
+
+
+
+
+class ShopStaffCreateView(APIView):
+    '''
+    
+    '''
+    permission_classes = [CustomShopAdminPermission]
+
+    def post(self, request):
+        '''
+        create new shop staff
+        '''
         staffserializer = CreateShopStaffSerializer(data=request.data)
         if staffserializer.is_valid(raise_exception=True):
             payload = get_decoded_payload(request)
@@ -95,55 +114,56 @@ def create_shop_staff(request):
     
 
 
-@api_view(['GET'])
-@permission_classes([CustomShopAdminPermission])
-def block_shop_staff(request,id):
+    def get(self, request):
+        '''
+        view all shop staff
+        '''
+        payload = get_decoded_payload(request)
+        shopstaff = ShopStaff.objects.filter(shop_id=payload['user_id'])
+        staffserializer = CreateShopStaffSerializer(shopstaff,many=True)
+        return Response({'staffs':f'{staffserializer.data}'})
+
+
+
+class EndUserBlockUnblock(APIView):
     '''
-    block shop staff
+    this method is block user and unblock user
     '''
-    if request.method == 'GET':
-        staff = ShopStaff.objects.get(id=id)
-        staff.is_active = False
-        staff.save()
-        return Response({'msg':f"{staff} is blocked"})
+    permission_classes=[CustomShopAdminPermission]
+    def put(self, request):
+        id = request.query_params.get('id')
+        # print(id)
+        try:
+            enduser = CustomUser.objects.get(id=id)
+        except CustomUser.DoesNotExist:
+            return Response({"error":f"{id} is not valid",'or':'check query param'})
+        else:
+            if enduser.is_active:
+                enduser.is_active = False
+                enduser.save()
+                return Response({"msg":f'blocked {enduser.username}'})
+            else:
+                enduser.is_active = True
+                enduser.save()
+                return Response({"msg":f'unblocked {enduser.username}'})
+
+
+class ProductChageAvailability(APIView):
+    '''
     
+    '''
 
-
-@api_view(['GET'])
-@permission_classes([CustomShopAdminPermission])
-def un_block_shop_staff(request,id):
-    '''
-    unblock shop staff
-    '''
-    if request.method == 'GET':
-        staff = ShopStaff.objects.get(id=id)
-        staff.is_active = True
-        staff.save()
-        return Response({'msg':f"{staff} is unblocked"})
-    
-
-@api_view(['GET'])
-@permission_classes([CustomShopAdminPermission])
-def block_end_user(request,id):
-    '''
-    block end user
-    '''
-    if request.method == 'GET':
-        enduser = CustomUser.objects.get(id=id)
-        enduser.is_active = False
-        enduser.save()
-        return Response({"msg":f" {enduser} blocked"})
-    
-
-
-@api_view(['GET'])
-@permission_classes([CustomShopAdminPermission])
-def un_block_end_user(request,id):
-    '''
-    unblock enduser
-    '''
-    if request.method == 'GET':
-        enduser = CustomUser.objects.get(id=id)
-        enduser.is_active = True
-        enduser.save()
-        return Response({"msg":f" {enduser} unblocked"})
+    def patch(self, request):
+        product_id = request.query_params.get(id)
+        try:
+            product = ShopProducts.objects.get(id=product_id)
+        except ShopProducts.DoesNotExist:
+            return Response({'error':f'product_id = {product_id}, is not valid'})
+        
+        if product.is_available:
+            product.is_available = False
+            product.save()
+            return Response({'msg':f"{product.name} is blocked"})
+        product.is_available = True
+        product.save()
+        return Response({'msg':f'{product.name} is unblocked'})

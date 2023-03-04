@@ -11,6 +11,7 @@ from rest_framework import filters
 from django_filters import rest_framework as filters
 from admin_app1.paginations import CustomPageNumberPagination
 from eshopadmin_product.models import ShopProducts
+from rest_framework.views import APIView
 
 
 
@@ -66,7 +67,7 @@ def login_end_user(request):
         if enduser is not None:
             token = get_tokens_for_user(user=enduser)
             return Response({'token':token,'msg':'enduser login success'})
-        return Response({'error':'username and password is not currect'})
+        return Response({'error':'you cant login right now','msg':'user credentials is not valid'})
 
 
 
@@ -79,19 +80,18 @@ class UserFilter(filters.FilterSet):
         fields = ['username','place']
 
 
-@api_view(['GET'])
-@permission_classes([CustomEndUserPermission])
-def view_all_shops_details(request):
+
+
+class ViewAllShopsDetails(APIView):
     '''
-    this is view all shop details for enduser
-    here django_filer and custom pagination used
-
+    view all shop details and select shop
     '''
-    pagination = CustomPageNumberPagination()
-    user_queryset = ShopDetails.objects.all()
-    user_filter = UserFilter(request.query_params, queryset=user_queryset)
-    result = pagination.paginate_queryset(user_filter.qs,request)
-    serializer = EndUserViewShop(result, many=True)
-    return pagination.get_paginated_response(serializer.data)
+    permission_classes=[CustomEndUserPermission]
 
-
+    def get(self, request):
+        pagination = CustomPageNumberPagination()
+        user_queryset = ShopDetails.objects.all()
+        user_filter = UserFilter(request.query_params, queryset=user_queryset)
+        result = pagination.paginate_queryset(user_filter.qs,request)
+        serializer = EndUserViewShop(result, many=True)
+        return pagination.get_paginated_response(serializer.data)
