@@ -3,7 +3,7 @@ from eshopadmin_app1.models import ShopDetails
 from eshopadmin_product.models import ShopProducts
 from rest_framework import serializers
 import re
-
+from django.contrib.auth.hashers import make_password
 
 
 class EndUserRegistrationSerializers(serializers.ModelSerializer):
@@ -49,3 +49,21 @@ class EndUserViewShop(serializers.ModelSerializer):
     class Meta:
         model = ShopDetails
         fields = '__all__'
+
+
+
+class EndUserDetailsEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username','phone_number']
+
+
+class EndUserEditPasswordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['password']
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data.get('password'))
+        instance.save()
+        return instance

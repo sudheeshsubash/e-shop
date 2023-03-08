@@ -46,6 +46,7 @@ class EndUserCartSerializer(serializers.ModelSerializer):
                 price = products.price
             )
         checkproduct.quantity += 1
+        checkproduct.price = checkproduct.quantity*products.price
         checkproduct.save()
         return checkproduct
     
@@ -70,6 +71,7 @@ class EndUserCartSerializer(serializers.ModelSerializer):
                 return 0
         
             cart.quantity += 1
+            cart.price = cart.quantity*cart.product.price
             cart.save()
             return cart.quantity
 
@@ -87,6 +89,7 @@ class EndUserCartSerializer(serializers.ModelSerializer):
             cart.delete()
             return 0
         cart.quantity -= 1
+        cart.price = cart.quantity*cart.product.price
         cart.save()
         return cart.quantity
 

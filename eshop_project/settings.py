@@ -30,7 +30,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = 'admin_app1.CustomUser'
+AUTH_USER_MODEL = 'superadmin.CustomUser'
 
 # Application definition
 
@@ -45,16 +45,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
 
-    'admin_app1.apps.AdminApp1Config',
-    'eshopadmin_app1.apps.EshopadminApp1Config',
-    'eshopadmin_product.apps.EshopadminProductConfig',
-    'shop_staff.apps.ShopStaffConfig',
-    'enduser_app1.apps.EnduserApp1Config',
-    'enduser_product.apps.EnduserProductConfig',
-    'enduser_orders.apps.EnduserOrdersConfig',
-
+    'superadmin.apps.SuperadminConfig',
+    'shopadmin.apps.ShopadminConfig',
 
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -99,7 +94,7 @@ DATABASES = {
     # mysql
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eshop',
+        'NAME': 'project',
         'USER':'root',
         'PASSWORD':'admin',
         'HOST':'127.0.0.1',
@@ -181,9 +176,9 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
-    "UPDATE_LAST_LOGIN": False,
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
 
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,

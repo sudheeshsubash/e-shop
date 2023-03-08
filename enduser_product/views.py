@@ -68,8 +68,7 @@ class CartManagementForEndUser(APIView):
             cartdetails = EndUserCart.objects.filter(user = user_id_decode['user_id'])
         except EndUserCart.DoesNotExist:
             return Response({'msg':'no cart data'})
-        cartserializer = EndUserCartSerializer(cartdetails, many=True)
-        return Response({'cart products':cartserializer.data})
+        return Response({'cart products':f"{cartdetails}"})
 
 
 

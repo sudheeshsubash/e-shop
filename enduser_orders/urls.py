@@ -3,7 +3,9 @@ from . import views
 
 
 urlpatterns = [
-     path('payment/',views.payment_with_razopay,name='payment'),
-     path('checkout/',views.OrderCheckOut.as_view(),name='checkout'),
+     path('checkoutonline/',views.OrderCheckOutOnlinePurchase.as_view(),name='checkoutonline'),
+     path('checkoutcash/',views.OrderCheckOutCashOnPurchase.as_view(),name='checkoutcash'),
+     path('vieworders/',views.ViewMyOrder.as_view(),name='vieworders'),
+     path('vieworders/products/',views.ViewMyOrderProducts.as_view(),name='orderproducts'),
      
 ]

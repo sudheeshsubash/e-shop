@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
-from .serializers import EndUserRegistrationSerializers,EndUserLoginSerializer,EndUserViewShop
+from .serializers import EndUserRegistrationSerializers,EndUserLoginSerializer,EndUserViewShop,EndUserDetailsEditSerializer,EndUserEditPasswordSerializer
 from admin_app1.otp import otp
 from admin_app1.models import CustomUser
 from eshopadmin_app1.models import ShopDetails
@@ -95,3 +95,42 @@ class ViewAllShopsDetails(APIView):
         result = pagination.paginate_queryset(user_filter.qs,request)
         serializer = EndUserViewShop(result, many=True)
         return pagination.get_paginated_response(serializer.data)
+
+
+
+
+class EditDetailsOfEndUser(APIView):
+    '''
+    
+    '''
+
+    def patch(self, request):
+        user_id = request.query_params.get('userid')
+        if user_id is None:
+            return Response({"error":'pass query params (userid)'})
+        try:
+            userdetails = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({'msg':f'{user_id} is not valid'})
+        enduserdetailsserializer = EndUserDetailsEditSerializer(userdetails,data=request.data)
+        if enduserdetailsserializer.is_valid(raise_exception=True):
+            enduserdetailsserializer.save()
+            return Response(enduserdetailsserializer.data)
+        return Response({'msg':'data not valid'})
+    
+
+
+    def put(self, request):
+        user_id = request.query_params.get('userid')
+        if user_id is None:
+            return Response({"error":'pass query params (userid)'})
+        try:
+            userdetails = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({'msg':f'{user_id} is not valid'})
+        enduserdetailsserializer = EndUserEditPasswordSerializer(userdetails,data=request.data)
+        if enduserdetailsserializer.is_valid(raise_exception=True):
+            enduserdetailsserializer.save()
+            return Response(enduserdetailsserializer.data)
+        return Response({'msg':'data not valid'})
+    

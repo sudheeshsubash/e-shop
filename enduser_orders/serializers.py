@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import EndUserOrders,OrderProducts
-
+from admin_app1.models import CustomUser
 
 
 class OrderPlaceSerializer(serializers.ModelSerializer):
@@ -20,4 +20,14 @@ class OrderProductSerializer(serializers.ModelSerializer):
     '''
     class Meta:
         model=OrderProducts
+        fields=''
+
+
+
+class ViewEndUserOrdersSerializer(serializers.ModelSerializer):
+    '''
+    
+    '''
+    class Meta:
+        model=CustomUser
         fields=''

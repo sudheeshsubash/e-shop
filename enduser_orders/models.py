@@ -5,6 +5,7 @@ status_choice = (
     ('pending','Pending'),
     ('cancle','Cancle'),
     ('complete','Complete'),
+    ('refund','Refund'),
 )
 
 payment_choice = (
@@ -19,12 +20,14 @@ class EndUserOrders(models.Model):
     shop = models.ForeignKey("eshopadmin_app1.ShopDetails", on_delete=models.CASCADE,related_name='shop')
     user = models.ForeignKey("admin_app1.CustomUser", on_delete=models.CASCADE,related_name='user')
     staff = models.ForeignKey("eshopadmin_app1.ShopStaff", on_delete=models.CASCADE,related_name='staff',null=True)
+    refund_order = models.ForeignKey("enduser_orders.EndUserOrders", on_delete=models.CASCADE,null=True,blank=True)
     payment_id = models.CharField(max_length=25,null=True)
     order_id = models.CharField(max_length=25,null=True)
     amount = models.IntegerField()
     status = models.CharField(max_length=20,choices=status_choice)
     payment_type = models.CharField(max_length=20,choices=payment_choice)
     create = models.DateTimeField(auto_now_add=True)
+
 
 
 
