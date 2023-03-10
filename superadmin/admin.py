@@ -1,3 +1,15 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import *
+
+
+
+admin.site.register(CustomUser)
+admin.site.register(ShopCategorys)
+admin.site.register(ShopDetails)
+admin.site.register(ProductsCategorys)
+admin.site.register(ShopStaff)
+admin.site.register(ShopProducts)
+admin.site.register(ProductImages)
+admin.site.register(EndUserWishlist)
+admin.site.register(EndUserCart)

@@ -28,6 +28,7 @@ class ShopCategorys(models.Model):
 
 
 
+
 class ShopDetails(CustomUser):
     '''
     shop details
