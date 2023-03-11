@@ -54,7 +54,10 @@ class AddShopProductSerializer(serializers.ModelSerializer):
     def product_save(self, shopid):
         shop = CustomUser.objects.get(id=shopid)
         try:
-            shop_product_exist = ShopProducts.objects.get(Q(name=self.data.get('name'))&Q(price=self.data.get('price'))&Q(discription=self.data.get('discription')))
+            shop_product_exist = ShopProducts.objects.get(
+                Q(name=self.data.get('name'))&Q(price=self.data.get('price'))|
+                Q(name=self.data.get('name'))&Q(discription=self.data.get('discription'))
+            )
         except ShopProducts.DoesNotExist:
             return ShopProducts.objects.create(
                 name = self.data.get('name'),price = self.data.get('price'),
@@ -75,3 +78,16 @@ class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImages
         fields = ['image']
+
+
+
+class ShopProductSerializer(serializers.ModelSerializer):
+    '''
+    
+    '''
+    class Meta:
+        model = ShopProducts
+        fields = [
+            'id','name','price','stock',
+            'categoryid','variation','discription'
+        ]

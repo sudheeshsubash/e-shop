@@ -4,21 +4,43 @@ from superadmin.custompermissions import CustomShopAdminPermission
 from superadmin.models import ProductImages,ProductVariation,ProductsCategorys,ShopProducts
 from django.db.models import Q
 from superadmin.tokengeneratedecode import get_decoded_payload
-from .serializers import ProductCategorySerializer,ProductVariationSerializer,AddShopProductSerializer,ProductImageSerializer
+from .serializers import ProductCategorySerializer,ProductVariationSerializer,AddShopProductSerializer
+from .serializers import ShopProductSerializer,ProductImageSerializer
+from superadmin.paginations import CustomPageNumberPagination
+
+
+
 
 
 class ViewAllProductsBasedOnShopId(APIView):
     '''
     show all products
     '''
+    permission_classes = [CustomShopAdminPermission]
 
+    def get(self, request):
+        pagination = CustomPageNumberPagination
+        userid_form_token = get_decoded_payload(request)
+        try:
+            shop_product_query = ShopProducts.objects.filter(shop=userid_form_token['user_id'])
+        except ShopProducts.DoesNotExist:
+            return Response({'result':'No products'})
+        # shop_product_pagination = pagination.paginate_queryset(queryset=shop_product_query,request=request)
+        shop_product_serializer = ShopProductSerializer(shop_product_query,many=True)
 
+        for product in shop_product_serializer.data:
+            product_image_query = ProductImages.objects.filter(product=product['id'])
+            product_image_serializer = ProductImageSerializer(product_image_query,many=True)
+
+            product['image'] = Response(product_image_serializer.data).data
+        # return pagination.get_paginated_response(shop_product_serializer.data)
+        return Response(shop_product_serializer.data)
 
 
 
 class ShopProductsAddEditDelete(APIView):
     '''
-    
+    Addproduct, Editproduct, Deleteproduct
     '''
     permission_classes = [CustomShopAdminPermission]
 
@@ -48,7 +70,22 @@ class ShopProductsAddEditDelete(APIView):
 
         if query_param_type != 'edit':
             return Response({'result':'only ?type=add/edit is valid'})
-    
+
+        product_id = request.query_params.get('productid')
+        if product_id is None:
+            return Response({'result':'query param need (productid)'})
+        try:
+            shop_product_query = ShopProducts.objects.filter(id=product_id)
+        except ShopProducts.DoesNotExist:
+            return Response({'result':'No products'})
+        shop_product_serializer = ShopProductSerializer(shop_product_query,many=True)
+
+        for product in shop_product_serializer.data:
+            product_image_query = ProductImages.objects.filter(product=product['id'])
+            product_image_serializer = ProductImageSerializer(product_image_query,many=True)
+            product['image'] = Response(product_image_serializer.data).data
+        return Response(shop_product_serializer.data)
+
 
 
     def post(self, request):
@@ -73,3 +110,18 @@ class ShopProductsAddEditDelete(APIView):
             shop_product_result = Response(shop_product_serializer.data).data
             shop_product_result['image'] = Response(product_image_serializer.data).data
             return Response(shop_product_result)
+
+
+
+    def patch(self, request):
+        query_param_type = request.query_params.get('type')
+        product_id = request.query_params.get('productid')
+        userid_form_token = get_decoded_payload(request)
+
+        if query_param_type is None or product_id is None:
+            return Response({'result':'query param need (?type=edit) or (productid)'})
+        if query_param_type != 'edit':
+            return Response({'result':'only ?type=edit is valid'})
+        
+        
+        return Response({'result':'patch method'})
