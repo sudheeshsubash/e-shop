@@ -11,7 +11,6 @@ from django.db.models import Q
 
 
 
-
 class ShopRegistration(APIView):
     '''
     shop registration
@@ -124,7 +123,7 @@ class ViewAllProductCategoryGlobelAndCustomCategorys(APIView):
 
 class CustomizeProductCategoryOrEditAddCategory(APIView):
     '''
-    
+    this is possible for (Add,Edit)(GET,POST,PATCH) methods
     '''
     permission_classes = [CustomShopAdminPermission]
 
@@ -140,10 +139,11 @@ class CustomizeProductCategoryOrEditAddCategory(APIView):
             return Response({'not valid type'})
         
         custom_product_category_id = request.query_params.get('categoryid')
+        takeshopid_from_token = get_decoded_payload(request)
         if custom_product_category_id is None:
             return  Response({'pass (categoryid) in query param'})
         try:
-            product_category_query = ProductsCategorys.objects.filter(id=custom_product_category_id).values('product_category_name')
+            product_category_query = ProductsCategorys.objects.filter(id=custom_product_category_id,shop=takeshopid_from_token['user_id']).values('product_category_name')
         except ProductsCategorys.DoesNotExist:
             return Response({'error':'No exist Product categorys'})
         
@@ -177,3 +177,23 @@ class CustomizeProductCategoryOrEditAddCategory(APIView):
 
 
 
+    def patch(self, request):
+        customize_type = request.query_params.get('type')
+        product_category_id = request.query_params.get('productid')
+        takeshopid_from_token = get_decoded_payload(request)
+
+        if customize_type is None or product_category_id is None:
+            return Response({'result':'pass (type) and (productid) to query params'})
+        if customize_type != 'edit':
+            return Response({'result':'only ?type=edit is valid'})
+        
+        try:
+            customize_product_category_query = ProductsCategorys.objects.get(id=product_category_id,shop=takeshopid_from_token['user_id'])
+        except ProductsCategorys.DoesNotExist:
+            return Response({'error':f'{product_category_id} is not valid'})
+        
+        product_category_serializer = EditProductCategorySerializer(customize_product_category_query,data=request.data)
+        if product_category_serializer.is_valid(raise_exception=True):
+            product_category_serializer.save()
+            return Response(product_category_serializer.data)
+        return Response({"error":'Enter a valid credetials'})

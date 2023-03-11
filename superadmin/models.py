@@ -17,6 +17,10 @@ class CustomUser(AbstractUser):
     phone_number = models.BigIntegerField(null=True,unique=True)
     role = models.CharField(max_length=10,choices=custom_user_role_choice)
 
+    class Meta:
+        verbose_name = 'CustomUser'
+
+
 
 
 class ShopCategorys(models.Model):
@@ -39,6 +43,10 @@ class ShopDetails(CustomUser):
     ownername = models.CharField(max_length=30)
     shop_category = models.ForeignKey("superadmin.ShopCategorys", on_delete=models.CASCADE,related_name='shopcategory')
 
+    class Meta:
+        verbose_name = 'ShopDetails'
+
+
 
 
 class ProductsCategorys(models.Model):
@@ -51,11 +59,16 @@ class ProductsCategorys(models.Model):
 
 
 
+
 class ShopStaff(CustomUser):
     '''
     shop staff
     '''
     shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,null=False,related_name='shopstaff')
+
+    class Meta:
+        verbose_name = 'ShopStaff'
+
 
 
 
@@ -68,9 +81,10 @@ class ShopProducts(models.Model):
     stock = models.IntegerField()
     date_of_create = models.DateTimeField(auto_now_add=True)
     is_available = models.BooleanField(default=True)
+    discription = models.TextField()
     shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,related_name='eshops')
     categoryid = models.ForeignKey("superadmin.ProductsCategorys", on_delete=models.CASCADE,related_name='productcategory')
-
+    variation = models.ForeignKey("superadmin.ProductVariation", on_delete=models.CASCADE,related_name='variation')
 
 
 class ProductImages(models.Model):
@@ -82,6 +96,12 @@ class ProductImages(models.Model):
 
 
 
+class ProductVariation(models.Model):
+    variation_name = models.CharField(max_length=50,null=False,unique=True)
+
+
+
+
 class EndUserCart(models.Model):
     '''
     cart
@@ -90,6 +110,8 @@ class EndUserCart(models.Model):
     product = models.ForeignKey("superadmin.ShopProducts", on_delete=models.CASCADE,related_name='product')
     quantity = models.IntegerField(default=1)
     total_amount = models.IntegerField(null=False)
+
+
 
 
 

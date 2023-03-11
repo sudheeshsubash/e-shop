@@ -118,3 +118,12 @@ class EditProductCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductsCategorys
         fields = ['product_category_name']
+    
+    
+    def validate(self, attrs):
+        product_category_name = attrs.get('product_category_name')
+
+        if not re.match(r"^[a-zA-Z\s]+$",product_category_name) or len(product_category_name)<4 or len(product_category_name) > 20:
+            raise serializers.ValidationError({"error":'Enter a valid product_category_name. This value may contain only letters','length':"Four letter to twenty letter"})
+
+        return attrs
