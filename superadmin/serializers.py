@@ -23,7 +23,7 @@ class LoginSerializer(serializers.ModelSerializer):
         if not re.match(r"^[a-zA-Z\s0-9]+$",password) or len(password) < 4 or len(password) > 20:
             validationerror['password2']={f"{password}":"Enter a valid password."}
 
-        if not re.match(r"^[a-zA-Z\s]+$",username) or len(username) < 4 or len(username) > 20:
+        if not re.match(r"^[a-zA-Z0-9\s]+$",username) or len(username) < 4 or len(username) > 20:
             validationerror['username']={f"{username}":'Enter a valid username.'}
 
         if len(validationerror) != 0:

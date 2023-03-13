@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'superadmin.apps.SuperadminConfig',
     'shopadmin.apps.ShopadminConfig',
     'shopadmin_product_management.apps.ShopadminProductManagementConfig',
-    
+    'user.apps.UserConfig',
 
 ]
 

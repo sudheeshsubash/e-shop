@@ -19,22 +19,21 @@ class ViewAllProductsBasedOnShopId(APIView):
     permission_classes = [CustomShopAdminPermission]
 
     def get(self, request):
-        pagination = CustomPageNumberPagination
+        pagination = CustomPageNumberPagination()
         userid_form_token = get_decoded_payload(request)
         try:
             shop_product_query = ShopProducts.objects.filter(shop=userid_form_token['user_id'])
         except ShopProducts.DoesNotExist:
             return Response({'result':'No products'})
-        # shop_product_pagination = pagination.paginate_queryset(queryset=shop_product_query,request=request)
-        shop_product_serializer = ShopProductSerializer(shop_product_query,many=True)
+        page = pagination.paginate_queryset(queryset=shop_product_query,request=request)
+        shop_product_serializer = ShopProductSerializer(page,many=True)
 
         for product in shop_product_serializer.data:
             product_image_query = ProductImages.objects.filter(product=product['id'])
             product_image_serializer = ProductImageSerializer(product_image_query,many=True)
 
-            product['image'] = Response(product_image_serializer.data).data
-        # return pagination.get_paginated_response(shop_product_serializer.data)
-        return Response(shop_product_serializer.data)
+            product['image'] = product_image_serializer.data
+        return pagination.get_paginated_response(shop_product_serializer.data)
 
 
 
