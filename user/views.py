@@ -6,6 +6,7 @@ from django_filters import rest_framework as filters
 from rest_framework.response import Response
 from superadmin.otps import otp
 from .serializers import RegistrationUserSerializer,RegistrationQuerysetToSerializer,UserCartSerializer,UserWishlistSerializer
+from .serializers import UserAddProductToWishlistSerializer
 from django.contrib.auth.hashers import make_password
 from superadmin.tokengeneratedecode import get_decoded_payload
 from superadmin.custompermissions import CustomEndUserPermission
@@ -113,16 +114,21 @@ class AddToCartGuestUserAndAuthenticatedUser(APIView):
         user_id_from_jwt_token = get_decoded_payload(request)
 
         cart_queryset = EndUserCart.objects.filter(user = user_id_from_jwt_token['user_id'])
-        if cart_queryset:
-            user_cart_serializer = UserCartSerializer(cart_queryset,many=True)
-            return Response(user_cart_serializer.data)
-        return Response({'result':'No cart Products'})
+        result = dict()
+        for item in range(len(cart_queryset)):
+            shop_product_queryset = ShopProducts.objects.get(id=cart_queryset[item].product.id)
+            shop_product_serializer = ShopProductSerializer(shop_product_queryset,many=False)
+            shop_product_serializer.data['cartid']=cart_queryset[item]
+            result[f"cartid {cart_queryset[item].id}"] = shop_product_serializer.data
+        return Response(result)
+
 
     def post(self, request):
         product_id_from_query_params = request.query_params.get('productid')
         if product_id_from_query_params is None:
-            return Response({'result':'productid is need pass to query param'})
-        
+            return Response({'result':'(?productid=value) is need pass to query param'})
+        if not ShopProducts.objects.filter(id=product_id_from_query_params).exists():
+            return Response({'result':'productid is not valid'})
         if request.user.is_authenticated:
             user_id_decode = get_decoded_payload(request=request)
             cart_serializer = UserCartSerializer(request.data,many=False)
@@ -177,23 +183,34 @@ class AddToGueWishliststUserAndAuthenticatedUser(APIView):
     def get(self, request, *args, **kwargs):
         user_id_from_jwttoken = get_decoded_payload(request=request)
         wishlist_query = EndUserWishlist.objects.filter(user=user_id_from_jwttoken['user_id'])
-        if wishlist_query:
-            user_wishlist_serializer = UserWishlistSerializer(wishlist_query,many=True)
-            return Response(user_wishlist_serializer.data)
-        return Response({'result','No products from wishlist'})
+        result = dict()
+        for item in range(len(wishlist_query)):
+            shop_product_queryset = ShopProducts.objects.get(id=wishlist_query[item].product.id)
+            shop_product_serializer = ShopProductSerializer(shop_product_queryset,many=False)
+            shop_product_serializer.data['wishlist']=wishlist_query[item]
+            result[f"wishlistid {wishlist_query[item].id}"] = shop_product_serializer.data
+        if result:
+            return Response(result)
+        return Response({"result":'No wishlist product'})
 
 
     def post(self, request, *args, **kwargs):
         user_id_from_jwttoken = get_decoded_payload(request=request)
-        user_wishlist_serializer = UserWishlistSerializer(data=request.data)
-        if user_wishlist_serializer.is_valid(raise_exception=True):
-            try:
-                EndUserWishlist.objects.get(product=user_wishlist_serializer.data.get('product'))
-            except EndUserWishlist.DoesNotExist:
-                return_wishlist_query = user_wishlist_serializer.save(user_id=user_id_from_jwttoken['user_id'])
-                result_serializer = UserWishlistSerializer(return_wishlist_query)
-                return Response(result_serializer.data)
-            return Response({'result':'product is already saved'})
+        product_id_from_query_params = request.query_params.get('productid')
+        if product_id_from_query_params is None:
+            return Response({'result':'(?productid=value) is need pass to query param'})
+        if not ShopProducts.objects.filter(id=product_id_from_query_params).exists():
+            return Response({'result':'productid is not valid'})
+        try:
+            EndUserWishlist.objects.get(product=product_id_from_query_params)
+        except EndUserWishlist.DoesNotExist:
+            return_wishlist_query = EndUserWishlist.objects.create(
+                user_id = user_id_from_jwttoken['user_id'],
+                product_id = product_id_from_query_params
+            )
+            result_serializer = UserWishlistSerializer(return_wishlist_query)
+            return Response(result_serializer.data)
+        return Response({'result':'product is already saved'})
 
 
     def delete(self, request):
@@ -209,4 +226,3 @@ class AddToGueWishliststUserAndAuthenticatedUser(APIView):
 
     def put(self, request, *args, **kwargs):
         return Response('this is put method')
-    

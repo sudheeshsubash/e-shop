@@ -121,3 +121,49 @@ class EndUserWishlist(models.Model):
     '''
     user = models.ForeignKey("superadmin.CustomUser", on_delete=models.CASCADE,related_name='users')
     product = models.ForeignKey("superadmin.ShopProducts", on_delete=models.CASCADE,related_name='productss')
+
+
+
+status_choice = (
+    ('pending','Pending'),
+    ('cancel','Cancel'),
+    ('complete','Complete'),
+    ('refund','Refund'),
+)
+
+payment_choice = (
+    ('cashonhand','Cash On hand'),
+    ('online','Online'),
+)
+
+
+class EndUserOrders(models.Model):
+    '''
+    EndUser Orders
+    '''
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,related_name='ordershop')
+    user = models.ForeignKey("superadmin.CustomUser", on_delete=models.CASCADE,related_name='orederuser')
+    staff = models.ForeignKey("superadmin.ShopStaff", on_delete=models.CASCADE,null=True,related_name='orderstaff')
+    payment_credit = models.IntegerField(null=True)
+    payment_debit = models.IntegerField(null=True)
+    payment_id = models.CharField(max_length=25,null=True)
+    order_id = models.CharField(max_length=25,null=True)
+    total_amount = models.IntegerField()
+    order_status = models.CharField(max_length=20,choices=status_choice)
+    payment_type = models.CharField(max_length=20,choices=payment_choice)
+    create = models.DateTimeField(auto_now_add=True)
+
+
+
+class OrderProducts(models.Model):
+    '''
+    Orders Product list
+    '''
+    order = models.ForeignKey("superadmin.EndUserOrders", on_delete=models.CASCADE,related_name='productorder')
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE)
+    product_id = models.IntegerField()
+    product_name = models.CharField(max_length=30)
+    product_price = models.IntegerField()
+    quantity = models.IntegerField()
+    total = models.IntegerField()
+    discription = models.TextField()

@@ -36,3 +36,8 @@ def get_decoded_payload(request):
     '''
     token = request.headers.get('Authorization').split(' ')[1]
     return jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+
+
+
+def query_param_token_decode(token):
+    return jwt.decode(token, SECRET_KEY,algorithms=['HS256'])

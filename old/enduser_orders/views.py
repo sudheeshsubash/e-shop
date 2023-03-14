@@ -41,9 +41,9 @@ class OrderCheckOutOnlinePurchase(APIView):
 
 
     def get(self, request):
-        userid = request.query_params.get('uid')
+        userid = request.query_params.get('userid')
         if userid is None:
-            return Response({'userid ':'please pass userid query params (uid)'})
+            return Response({'userid ':'please pass userid query params (userid)'})
         findamount = PlaceOrderOrSaveCartDataToOrderTable()
         amount = findamount.total_amout_of_cart(user_id=userid)
         context = {
@@ -164,7 +164,7 @@ class ViewMyOrder(APIView):
 
                 else:
                     if not orderdetails.status == 'cancle':
-                        orderdetails.status = 'cancle'
+                        orderdetails.status = 'cancel'
                         orderdetails.save()
                         if orderdetails.staff:
                             EndUserOrders.objects.create(

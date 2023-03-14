@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'shopadmin.apps.ShopadminConfig',
     'shopadmin_product_management.apps.ShopadminProductManagementConfig',
     'user.apps.UserConfig',
+    'user_orders',
 
 ]
 

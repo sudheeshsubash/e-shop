@@ -18,5 +18,6 @@ urlpatterns = [
     path('api/shop/',include('shopadmin.urls')),
     path('api/shop/product/',include('shopadmin_product_management.urls')),
     path('api/user/',include('user.urls')),
+    path('api/user/order/',include('user_orders.urls')),
     
 ]

@@ -139,3 +139,9 @@ class UserWishlistSerializer(serializers.ModelSerializer):
             user_id = user_id,
             product_id = self.data.get('product')
         )
+
+
+class UserAddProductToWishlistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EndUserWishlist
+        fields = ['id','product']

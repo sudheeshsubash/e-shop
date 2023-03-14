@@ -12,8 +12,8 @@ class LoginSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self):
-        username = self.data.get('username')
-        password = self.data.get('password')
+        username = self.data.get('username',None)
+        password = self.data.get('password',None)
 
         validationerror = dict() # validation error variable
         # start validation here
