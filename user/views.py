@@ -115,11 +115,14 @@ class AddToCartGuestUserAndAuthenticatedUser(APIView):
 
         cart_queryset = EndUserCart.objects.filter(user = user_id_from_jwt_token['user_id'])
         result = dict()
+        result_list = list()
         for item in range(len(cart_queryset)):
             shop_product_queryset = ShopProducts.objects.get(id=cart_queryset[item].product.id)
             shop_product_serializer = ShopProductSerializer(shop_product_queryset,many=False)
-            shop_product_serializer.data['cartid']=cart_queryset[item]
-            result[f"cartid {cart_queryset[item].id}"] = shop_product_serializer.data
+            result_list.append({'product':shop_product_serializer.data})
+            result_list.append({'cartquantity':cart_queryset[item].quantity})
+            result_list.append({'total amount':cart_queryset[item].total_amount})
+            result[f"cartid {cart_queryset[item].id}"] = result_list
         return Response(result)
 
 

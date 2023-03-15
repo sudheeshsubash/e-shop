@@ -5,7 +5,8 @@ urlpatterns = [
     path('',views.ShopAdminDashBord.as_view(),name='shopdashbord'),
     path('registration/',views.ShopRegistration.as_view(),name='shopregistration'),
     path('registration/otp/',views.RegistrationOtpConfirm.as_view(),name='shopregistration'),
-    path('product/category/',views.ViewAllProductCategoryGlobelAndCustomCategorys.as_view(),name='productcategory'),
-    path('product/category/editadd/',views.CustomizeProductCategoryOrEditAddCategory.as_view(),name='addedit'),
+    path('login/',views.ShopAdminLogin.as_view(),name='login'),
+    path('productcategory/',views.ViewAllProductCategoryGlobelAndCustomCategorys.as_view(),name='productcategory'),
+    path('productcategory/editadd/',views.CustomizeProductCategoryOrEditAddCategory.as_view(),name='addedit'),
 
 ]

@@ -4,6 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import BasePermission
 from eshop_project.settings import SECRET_KEY
 import jwt
+from superadmin.models import CustomUser
 
 
 
@@ -41,3 +42,8 @@ def get_decoded_payload(request):
 
 def query_param_token_decode(token):
     return jwt.decode(token, SECRET_KEY,algorithms=['HS256'])
+
+
+def check_jwt_user_id_kwargs_id(request,kwargs):
+    user_id = CustomUser.objects.get(username=request.user)
+    return user_id.id == kwargs

@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from superadmin.tokengeneratedecode import get_decoded_payload
+from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user,check_jwt_user_id_kwargs_id
 from superadmin.custompermissions import CustomShopAdminPermission
 from .serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer,EditProductCategorySerializer
 from .serializers import RegistrationShopDetailsOtpConfirmationSerializer,ProductCategorySerializer,AddProductCategorySerializer
@@ -8,6 +8,12 @@ from superadmin.models import ShopCategorys,ShopDetails,ProductsCategorys
 from superadmin.otps import otp
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
+from superadmin.serializers import LoginSerializer
+from django.contrib.auth import authenticate,login,logout
+from rest_framework import status
+
+
+
 
 
 
@@ -98,8 +104,30 @@ class ShopAdminDashBord(APIView):
     '''
     permission_classes=[CustomShopAdminPermission]
     
-    def get(self, request):
-        return Response('shop admin dashbord')
+    def get(self, request, *args, **kwargs):
+        if check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
+            return Response('shop admin dashbord')
+        return Response({'result':'You dont have permission for access this api'})
+
+
+
+class ShopAdminLogin(APIView):
+    '''
+    
+    '''
+    def get(self, request, *args, **kwargs):
+        login_serializer_data = LoginSerializer(request.data)
+        if login_serializer_data.validate():
+            username = login_serializer_data.data.get('username')
+            password = login_serializer_data.data.get('password')
+            users = authenticate(username=username,password=password)
+            if users is not None:
+                if users.id == kwargs['shopid']:
+                    token = get_tokens_for_user(user=users)
+                    login(request,users)
+                    return Response({'token':token},status=status.HTTP_200_OK)
+            return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
+        return Response('login')
 
 
 
@@ -109,15 +137,27 @@ class ViewAllProductCategoryGlobelAndCustomCategorys(APIView):
     '''
     permission_classes=[CustomShopAdminPermission]
 
-    def get(self, request):
-        takeshopid_from_token = get_decoded_payload(request)
+    def get(self, request, *args, **kwargs):
+        if not check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
+            return Response({'error':"You have no permission for access this shop method"})
         try:
-            product_category_query = ProductsCategorys.objects.filter(Q(shop__isnull=True)|Q(shop=takeshopid_from_token['user_id']))
+            product_category_query = ProductsCategorys.objects.filter(Q(shop__isnull=True)|Q(shop=kwargs['shopid']))
         except ProductsCategorys.DoesNotExist:
             return Response({'error':'No Product categorys'})
         
         product_category_serializer = ProductCategorySerializer(product_category_query,many=True)
         return Response(product_category_serializer.data)
+
+
+    # def get(self, request):
+    #     takeshopid_from_token = get_decoded_payload(request)
+    #     try:
+    #         product_category_query = ProductsCategorys.objects.filter(Q(shop__isnull=True)|Q(shop=takeshopid_from_token['user_id']))
+    #     except ProductsCategorys.DoesNotExist:
+    #         return Response({'error':'No Product categorys'})
+        
+    #     product_category_serializer = ProductCategorySerializer(product_category_query,many=True)
+    #     return Response(product_category_serializer.data)
 
 
 
