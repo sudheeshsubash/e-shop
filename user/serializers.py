@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from superadmin.models import CustomUser,EndUserCart,ShopProducts,EndUserWishlist
+from superadmin.models import CustomUser,EndUserCart,ShopProducts,EndUserWishlist,UsersDetails
 import re
-
+from rest_framework.response import Response
 
 
 
@@ -40,8 +40,38 @@ class RegistrationQuerysetToSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['username','email']
-    
 
+
+class OtpEnter(serializers.Serializer):
+    otp = serializers.IntegerField()
+
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UsersDetails
+        fields = [
+            'username','password'
+        ]
+
+    def validate(self):
+        username = self.data.get('username')
+        password = self.data.get('password')
+
+        validationerror = dict() # validation error variable
+        # start validation here
+        if len(username)<= 0 or len(password)<= 0:
+            raise serializers.ValidationError('username and password required')
+
+        if not re.match(r"^[a-zA-Z\s0-9]+$",password) or len(password) < 4 or len(password) > 20:
+            validationerror['password2']={f"{password}":"Enter a valid password."}
+
+        if not re.match(r"^[a-zA-Z0-9\s]+$",username) or len(username) < 4 or len(username) > 20:
+            validationerror['username']={f"{username}":'Enter a valid username.'}
+
+        if len(validationerror) != 0:
+            raise serializers.ValidationError(validationerror)
+        return True
 
 
 class UserCartSerializer(serializers.ModelSerializer):
@@ -52,7 +82,8 @@ class UserCartSerializer(serializers.ModelSerializer):
         model=EndUserCart
         fields=['id','product','quantity','total_amount']
 
-    def save(self, user_id, product_id):
+
+    def save(self, user_id, product_id, shop_id):
         '''
         custom save method parameters user id and produt id 
         the fetch price data and save to endusercart database
@@ -61,17 +92,18 @@ class UserCartSerializer(serializers.ModelSerializer):
             products = ShopProducts.objects.get(id=product_id)
         except ShopProducts.DoesNotExist:
             print('product id is not valid')
-            raise ValueError('Product is not exist')
+            raise serializers.ValidationError({"error":"product is not valid"})
         
         try:
-            checkproduct = EndUserCart.objects.get(user=user_id,product=product_id)
+            checkproduct = EndUserCart.objects.get(user=user_id,product=product_id,shop=shop_id)
         except EndUserCart.DoesNotExist:
             print('product is not exist')
 
             return EndUserCart.objects.create(
                 user_id = user_id,
                 product_id = product_id,
-                total_amount = products.price
+                total_amount = products.price,
+                shop_id = shop_id
             )
         checkproduct.quantity += 1
         checkproduct.total_amount = checkproduct.quantity*products.price
@@ -145,3 +177,19 @@ class UserAddProductToWishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = EndUserWishlist
         fields = ['id','product']
+
+
+
+
+
+
+class ViewProductSerializer(serializers.ModelSerializer):
+    '''
+    
+    '''
+    class Meta:
+        model = ShopProducts
+        fields = [
+            'id','name','price','discription','stock',
+            'is_available','categoryid','variation'
+        ]

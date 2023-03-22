@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser,ShopCategorys
+from .models import CustomUser,ShopCategorys,ProductsCategorys
 import re
 
 
@@ -46,3 +46,28 @@ class MainCategoryShopCategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'validationerror':f'{shop_category_name} is not valid'})
 
         return attrs
+    
+
+class ShopRegistrationOtpSerializer(serializers.Serializer):
+    otp = serializers.IntegerField()
+
+
+
+class ProductCategorySerializers(serializers.ModelSerializer):
+    class Meta:
+        model = ProductsCategorys
+        fields = ['product_category_name','shop_category']
+
+
+
+class AddGlobelShopCategorySerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductsCategorys
+        fields = [
+            'product_category_name','shop_category','id',
+        ]
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+    

@@ -77,7 +77,7 @@ class AddShopProductSerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImages
-        fields = ['image']
+        fields = ['id','image']
 
 
 
@@ -88,6 +88,7 @@ class ShopProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopProducts
         fields = [
-            'id','name','price','stock',
-            'categoryid','variation','discription'
+            'id','name','price','discription'
         ]
+
+

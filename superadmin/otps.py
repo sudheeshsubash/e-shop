@@ -8,7 +8,7 @@ def otp(phone):
 
     payload = f"variables_values={otp_number}&route=otp&numbers={phone}"
     headers = {
-        'authorization': "jGMpbHuHOq35AFV26oha2gX3IoLfW2WaS8urwhDQkr1ihpkhKOsMrwAYDzES",
+        'authorization': "LzDfy8EGHOTJwIxZB2WM9YbmFkcp0avodP3jg5CVitX4elqQh1zgl5y4rbwAYfDGJxcetus8T1aHWROS",
         'Content-Type': "application/x-www-form-urlencoded",
         'Cache-Control': "no-cache",
         }

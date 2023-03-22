@@ -16,8 +16,8 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('',include('superadmin.urls')),
     path('<int:shopid>/',include('shopadmin.urls')),
-    path('shop/product/',include('shopadmin_product_management.urls')),
-    path('user/',include('user.urls')),
-    path('user/order/',include('user_orders.urls')),
+    path('<int:shopid>/product/',include('shopadmin_product_management.urls')),
+    path('<int:shopid>/user/',include('user.urls')),
+    path('<int:shopid>/user/order/',include('user_orders.urls')),
 
 ]

@@ -7,8 +7,14 @@ urlpatterns = [
     
     path('loginlogout/',views.LoginSuperAdminEndUserShopAdminShopStaff.as_view(),name='login'),
     path('dashbord/',views.SuperAdminDashBord.as_view(),name='admindashbord'),
-    path('blockunblock/',views.ShopBlcokUnblock.as_view(),name='blockunblock'),
-    path('shopcategory/',views.ShopCategoryOrMainClassification.as_view(),name='shopcategory'),
-    path('shopcategory/addedit/',views.CustomizeShopCategoryOrMainCategory.as_view(),name='customshopcategory'),
+    path('<int:shopid>/blockunblock/',views.ShopBlcokUnblock.as_view(),name='blockunblock'),
+    path('registration/',views.ShopRegistration.as_view()),
+    path('registration/otp/',views.RegistrationOtpConfirm.as_view()),
+    path('shopcategory/',views.ShopCategoryView.as_view(),name="shopcategory"),
+    path('shopcategory/add/',views.AddShopCategory.as_view(),name="addshopcategory"),
+    path('shopcategory/edit/<int:categoryid>/',views.EditShopCategory.as_view(),name="editshopcategory"),
+    path('globelcategory/',views.GlobelShopCategory.as_view(),name='globelcategory'),
+    path('globelcategory/add/',views.AddGlobelShopCategory.as_view(),name='addglobelcategory'),
+    path('globelcategory/<int:categoryid>/edit/',views.EditGlobelShopCategory.as_view(),name='editglobelcategory'),
 
 ]

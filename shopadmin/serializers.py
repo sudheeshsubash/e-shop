@@ -46,7 +46,7 @@ class RegistrationShopDetailsSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password":f'password , password2 is not same'})
         
 
-        if not re.match(r"^[a-zA-Z\s]+$",username):
+        if not re.match(r"^[a-zA-Z0-9\s]+$",username):
             validationerror['username']={f"{username}":'Enter a valid username. This value may contain only letters'}
 
         if len(str(phone_number)) != 10:
@@ -75,11 +75,11 @@ class RegistrationShopDetailsOtpConfirmationSerializer(serializers.ModelSerializ
     '''
     
     '''
-    password2 = serializers.CharField(max_length=20)
+    # password2 = serializers.CharField(max_length=20)
     class Meta:
         model = ShopDetails
         # exclude = 
-        fields = '__all__'
+        fields = ['id','username','ownername','phone_number','address','place']
 
 
 

@@ -49,6 +49,15 @@ class ShopDetails(CustomUser):
 
 
 
+class UsersDetails(CustomUser):
+    '''
+    
+    '''
+    shop = models.CharField(max_length=50)
+
+
+
+
 class ProductsCategorys(models.Model):
     '''
     shop products
@@ -108,9 +117,9 @@ class EndUserCart(models.Model):
     '''
     user = models.ForeignKey("superadmin.CustomUser", on_delete=models.CASCADE,related_name='user')
     product = models.ForeignKey("superadmin.ShopProducts", on_delete=models.CASCADE,related_name='product')
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,related_name='whichshop')
     quantity = models.IntegerField(default=1)
     total_amount = models.IntegerField(null=False)
-
 
 
 
