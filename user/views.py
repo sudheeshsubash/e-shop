@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from superadmin.paginations import CustomPageNumberPagination
-from superadmin.models import ShopProducts,ProductImages,CustomUser,EndUserCart,EndUserWishlist,UsersDetails
+from superadmin.models import ShopProducts,ProductImages,CustomUser,EndUserCart,EndUserWishlist,UsersDetails,ShopDetails
 from shopadmin_product_management.serializers import ShopProductSerializer,ProductImageSerializer
 from django_filters import rest_framework as filters
 from rest_framework.response import Response
@@ -8,7 +8,7 @@ from superadmin.otps import otp
 from .serializers import RegistrationUserSerializer,RegistrationQuerysetToSerializer,UserCartSerializer,UserWishlistSerializer
 from .serializers import UserAddProductToWishlistSerializer,ViewProductSerializer,OtpEnter,LoginSerializer
 from django.contrib.auth.hashers import make_password
-from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user
+from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user,check_valid_shop_userid
 from superadmin.custompermissions import CustomEndUserPermission
 from django.contrib.auth import authenticate,login
 from rest_framework import status
@@ -50,8 +50,11 @@ class RegistrationOtpConfirm(APIView):
         return Response({'result':"required value, pass OTP number to query param (otpnumber),"})
 
     def post(self, request, *args, **kwargs):
+        try:
+            shop_kwargs_check = ShopDetails.objects.get(id=kwargs['shopid'])
+        except ShopDetails.DoesNotExist:
+            return Response({"error":"this api is not valid"})
         otp_serializer = OtpEnter(request.data)
-        
         if int(otp_serializer.data.get('otp')) != request.session.get('otpnumber',None):
             return Response({'result':'otpnumber is not valid'})
         
@@ -60,7 +63,7 @@ class RegistrationOtpConfirm(APIView):
                 password = make_password(request.session.get('password',None)),
                 phone_number = request.session.get('phone_number',None),
                 role = 'enduser',
-                shop = kwargs['shopid'],
+                shop_id = shop_kwargs_check.id,
         )
         request.session.flush()
         shop_serializer = RegistrationQuerysetToSerializer(user,many=False)
@@ -83,11 +86,12 @@ class LoginUser(APIView):
                     user_details = UsersDetails.objects.get(customuser_ptr_id=users.id)
                 except Exception as e:
                     return Response(e)
-                if int(user_details.shop) == kwargs['shopid']:
+                if int(user_details.shop.id) == kwargs['shopid']:
                     token = get_tokens_for_user(user=users)
                     login(request,users)
                     return Response({'token':token},status=status.HTTP_200_OK)
             return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
+
 
     
 
@@ -156,6 +160,9 @@ class AllCartViewGuestUserAuthenticatedUser(APIView):
     permission_classes = [CustomEndUserPermission]
 
     def get(self, request, *args, **kwargs):
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
+        
         cart_queryset = EndUserCart.objects.filter(shop=kwargs['shopid'])
         result = dict()
         result_list = list()
@@ -177,8 +184,10 @@ class UserAddProductToCart(APIView):
     permission_classes = [CustomEndUserPermission]
 
     def post(self, request, *args, **kwargs):
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
+        
         payload = get_decoded_payload(request)
-
         cart_serializer = UserCartSerializer(request.data)
         user_cart_data = cart_serializer.save(
             user_id=payload['user_id'],
@@ -197,6 +206,9 @@ class QuantityDelete(APIView):
     permission_classes = [CustomEndUserPermission]
 
     def patch(self, request, *args, **kwargs):
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
+        
         type = request.query_params.get('type')
         # cartid = request.query_params.get('cartid')
         if  type is None:
@@ -221,6 +233,8 @@ class QuantityDelete(APIView):
     
 
     def delete(self, request, *args, **kwargs):
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
         try: 
             EndUserCart.objects.get(id=kwargs['cartid']).delete()
         except EndUserCart.DoesNotExist:  # added this line to catch exception when the object does not exist 
@@ -234,6 +248,8 @@ class AllWishlistView(APIView):
     permission_classes = [CustomEndUserPermission]
     
     def get(self, request, *args, **kwargs):
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
         user_id_from_jwttoken = get_decoded_payload(request)
 
         wishlist_query = EndUserWishlist.objects.filter(user=user_id_from_jwttoken['user_id'])
@@ -254,6 +270,8 @@ class AddToWishlist(APIView):
     permission_classes = [CustomEndUserPermission]
 
     def post(self, request, *args, **kwargs):
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
         user_id_from_jwttoken = get_decoded_payload(request)
 
         try:
@@ -275,7 +293,8 @@ class EditWishlist(APIView):
     permission_classes = [CustomEndUserPermission]
 
     def delete(self, request, *args, **kwargs):
-
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
         try:
             EndUserWishlist.objects.get(id=kwargs['wishlistid']).delete()
         except EndUserWishlist.DoesNotExist:
@@ -291,7 +310,8 @@ class WishlistToCart(APIView):
     permission_classes = [CustomEndUserPermission]
 
     def put(self, request, *args, **kwargs):
-
+        if check_valid_shop_userid(request,kwargs['shopid']):
+            return Response({"error":"You don't have permission for access this shop api"})
         payload = get_decoded_payload(request)
         wishlist_query = EndUserWishlist.objects.filter(user=payload['user_id'])
         if not wishlist_query:

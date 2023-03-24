@@ -4,6 +4,7 @@ from . import views
 
 
 urlpatterns = [
-    path('',views.OnlinePlaceOrder.as_view(),name='placeorder'),
+    path('',views.OnlinePlaceORder.as_view()),
+    path('address/',views.AddUserAddress.as_view(),name='address'),
     
 ]

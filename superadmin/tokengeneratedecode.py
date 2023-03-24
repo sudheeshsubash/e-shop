@@ -4,7 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import BasePermission
 from eshop_project.settings import SECRET_KEY
 import jwt
-from superadmin.models import CustomUser
+from superadmin.models import CustomUser,UsersDetails
 
 
 
@@ -39,7 +39,6 @@ def get_decoded_payload(request):
     return jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
 
 
-
 def query_param_token_decode(token):
     return jwt.decode(token, SECRET_KEY,algorithms=['HS256'])
 
@@ -47,3 +46,14 @@ def query_param_token_decode(token):
 def check_jwt_user_id_kwargs_id(request,kwargs):
     user_id = CustomUser.objects.get(username=request.user)
     return user_id.id == kwargs
+
+
+def check_valid_shop_userid(request,kwargs):
+    user = UsersDetails.objects.get(username=request.user)
+    return not user.shop.id == kwargs['shopid']
+
+
+def check_online_place_order(token,kwargs):
+    payload = jwt.decode(token, SECRET_KEY,algorithms=['HS256'])
+    user = UsersDetails.objects.get(id=payload['user_id'])
+    return not user.shop.id == kwargs['shopid']

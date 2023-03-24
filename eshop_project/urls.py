@@ -19,5 +19,6 @@ urlpatterns = [
     path('<int:shopid>/product/',include('shopadmin_product_management.urls')),
     path('<int:shopid>/user/',include('user.urls')),
     path('<int:shopid>/user/order/',include('user_orders.urls')),
+    path('<int:shopid>/user/details/',include('user_details.urls')),
 
 ]

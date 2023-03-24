@@ -53,8 +53,21 @@ class UsersDetails(CustomUser):
     '''
     
     '''
-    shop = models.CharField(max_length=50)
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE)
 
+
+
+
+class UserAddress(models.Model):
+    '''
+    
+    '''
+    address = models.CharField(max_length=300)
+    pincode = models.IntegerField()
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
+    user = models.ForeignKey("superadmin.UsersDetails", on_delete=models.CASCADE)
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE)
 
 
 
