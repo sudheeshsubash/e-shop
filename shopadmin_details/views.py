@@ -1,12 +1,6 @@
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
-from .serializers import ChangePasswordSerializer,OtpSerializer
-from superadmin.tokengeneratedecode import get_decoded_payload
-from superadmin.custompermissions import CustomEndUserPermission
-from superadmin.models import UsersDetails,CustomUser
-from superadmin.otps import otp
-from django.contrib.auth.hashers import make_password
+from django.shortcuts import render
+
+# Create your views here.
 
 
 
