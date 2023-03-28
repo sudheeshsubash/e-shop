@@ -42,7 +42,7 @@ class OnlinePlaceORder(APIView):
         order_id = order['id']
         payment_id = request.POST.get('razorpay_payment_id')
 
-        order = placeorder.cart_to_order_place(user_id=int(userid['user_id']),payment_type='online',orderid=order_id,paymentid=payment_id)
+        order = placeorder.cart_to_order_place(user_id=int(userid['user_id']),payment_type='online',orderid=order_id,paymentid=payment_id,shop_id=kwargs['shopid'])
         return Response({'msg':f'order is done '})
 
 
@@ -87,7 +87,7 @@ class PlaceOrderOrSaveCartDataToOrderTable:
 
 class AddUserAddress(APIView):
     '''
-    
+    Add User Address 
     '''
     permission_classes = [CustomEndUserPermission]
     def post(self, request, *args, **kwargs):
@@ -97,4 +97,52 @@ class AddUserAddress(APIView):
             address = address_serializer.save(shopid=kwargs['shopid'],userid=payload['user_id'])
             print(address,address_serializer.data)
             return Response({"result":address_serializer.data})
+
+
+
+class CashOnPlaceOrder(APIView):
+    '''
     
+    '''
+    permission_classes = [CustomEndUserPermission]
+
+    def post(self, request, *args, **kwargs):
+        payload = get_decoded_payload(request)
+        cash_on_place = CashOnPlaceOrderCartToOrder()
+        cash_on_place.cart_to_order_place(user_id=payload['user_id'],payment_type='cashonhand',shop_id=kwargs['shopid'])
+        return Response({"result":"Order Placed"})
+
+
+class CashOnPlaceOrderCartToOrder:
+
+    def total_amout_of_cart(self, user_id):
+        amount = int()
+        for cartitem in EndUserCart.objects.filter(user=user_id):
+            amount += cartitem.total_amount
+        return amount
+
+    def cart_to_order_place(self, user_id, shop_id, payment_type, orderid=None, paymentid=None):
+        cart = EndUserCart.objects.filter(user=user_id)
+        if not cart:
+            return Response({'result':'No cart Product'})
+        enduserorder = EndUserOrders.objects.create(
+            shop_id = shop_id,
+            user_id = user_id,
+            total_amount = self.total_amout_of_cart(user_id=user_id),
+            order_status = 'pending',
+            payment_type = payment_type,
+            payment_credit = self.total_amout_of_cart(user_id=user_id)
+        )
+        for cart_item in cart:
+            OrderProducts.objects.create(
+                order_id = enduserorder.id,
+                shop_id = cart_item.product.shop.id,
+                product_id = cart_item.product.id,
+                product_name = cart_item.product.name,
+                product_price = cart_item.product.price,
+                quantity = cart_item.quantity,
+                total = cart_item.total_amount,
+                discription = cart_item.product.discription
+            )
+        cart.delete()
+        return enduserorder

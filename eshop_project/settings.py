@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'user.apps.UserConfig',
     'user_orders',
     'user_details',
+    'shop_staff',
 
 ]
 

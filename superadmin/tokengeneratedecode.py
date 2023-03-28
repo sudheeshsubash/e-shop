@@ -50,7 +50,7 @@ def check_jwt_user_id_kwargs_id(request,kwargs):
 
 def check_valid_shop_userid(request,kwargs):
     user = UsersDetails.objects.get(username=request.user)
-    return not user.shop.id == kwargs['shopid']
+    return not user.shop.id == kwargs
 
 
 def check_online_place_order(token,kwargs):

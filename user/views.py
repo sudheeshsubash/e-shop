@@ -109,6 +109,8 @@ class ViewAllProductsForUser(APIView):
     view all the products, Add pagination and filters
     '''
 
+    permission_classes = [CustomEndUserPermission]
+    
     def get(self, request, *args, **kwargs):
         
         pagination = CustomPageNumberPagination()
@@ -132,6 +134,7 @@ class ViewProductsDetails(APIView):
     '''
     
     '''
+    permission_classes = [CustomEndUserPermission]
 
     def get(self, request, *args, **kwargs):
         user_id_from_jwttoken = get_decoded_payload(request)
