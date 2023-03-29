@@ -7,11 +7,46 @@ from rest_framework import status
 from .models import ShopDetails,ShopCategorys,ProductsCategorys
 from .custompermissions import CustomAdminPermission
 from rest_framework.decorators import permission_classes
-from shopadmin.serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer
+from shopadmin.serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer,StaffRegistrationSerializer
 from shopadmin.serializers import RegistrationShopDetailsOtpConfirmationSerializer,ProductCategorySerializer
 from .serializers import AddGlobelShopCategorySerializers,ProductCategorySerializers
 from superadmin.otps import otp
 from django.contrib.auth.hashers import make_password
+
+
+class CommonLogin(APIView):
+    '''
+    this is login for all roles superadmin,
+    eshopadmin, eshopstaff, enduser
+    '''
+    def post(self, request):
+        if request.user.is_authenticated:
+            return Response({'status':'already login'})
+        login_serializer_data = LoginSerializer(request.data)
+        if login_serializer_data.validate():
+            username = login_serializer_data.data.get('username')
+            password = login_serializer_data.data.get('password')
+            users = authenticate(username=username,password=password)
+            if users is not None:
+                token = get_tokens_for_user(user=users)
+                login(request,users)
+                return Response({'token':token},status=status.HTTP_200_OK)
+            return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
+
+
+
+class StaffRegistration(APIView):
+        def post(self, request):
+            registration_form_data_serializer = StaffRegistrationSerializer(data=request.data)
+            if registration_form_data_serializer.is_valid(raise_exception=True):
+                request.session['username'] = registration_form_data_serializer.data.get('username')
+                request.session['password'] = registration_form_data_serializer.data.get('password')
+                request.session['phone_number'] = registration_form_data_serializer.data.get('phone_number')
+                request.session['shop_category'] = registration_form_data_serializer.data.get('shop_category')
+
+                return Response({"otp":f'otp sended to phone'})
+
+
 
 
 

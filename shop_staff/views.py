@@ -5,8 +5,30 @@ from superadmin.models import EndUserOrders,OrderProducts
 from rest_framework.response import Response
 from datetime import datetime
 from django_filters import rest_framework as filters
-from superadmin.tokengeneratedecode import get_decoded_payload
+from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user
+from .serializers import LoginSerializer
+from django.contrib.auth import authenticate
+from superadmin.models import ShopStaff
 
+
+class LoginStaff(APIView):
+
+    def get(self, request, *args, **kwargs):
+        login_serializer = LoginSerializer(request.data) 
+        if login_serializer.validate():
+            username = login_serializer.data.get('username')
+            password = login_serializer.data.get('password')
+            users = authenticate(username=username,password=password)
+            if users is not None:
+                try:
+                    user_details = ShopStaff.objects.get(customuser_ptr_id=users.id)
+                except Exception as e:
+                    return Response(e)
+                if int(user_details.shop.id) == kwargs['shopid']:
+                    token = get_tokens_for_user(user=users)
+
+                    return Response({'token':token})
+            return Response({'error':f'{username} and {password} is not correct'})
 
  
 
@@ -25,6 +47,24 @@ class StaffOrderView(APIView):
             orders_list = EndUserOrders.objects.filter(
                 shop=kwargs['shopid'],create__date=today_date
             )
+        if not orders_list:
+            return Response({"error":"Shop Have No Orders"})
+        return_orders_list = list()
+        order_view_serializer = StaffViewOrdersSerializer(orders_list,many=True)
+        for order in order_view_serializer.data:
+            order_products = OrderProducts.objects.get(order = order['id'])
+            order_products_serializer = OrderProductsSerializer(order_products,many=False)
+            order['product'] = order_products_serializer.data
+        return Response({"result":order_view_serializer.data})
+
+
+
+class ViewAllOrders(APIView):
+
+    def get(self, request, *args, **kwargs):
+
+        orders_list = EndUserOrders.objects.filter(shop=kwargs['shopid'])
+
         if not orders_list:
             return Response({"error":"Shop Have No Orders"})
         return_orders_list = list()

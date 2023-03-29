@@ -109,8 +109,10 @@ class CashOnPlaceOrder(APIView):
     def post(self, request, *args, **kwargs):
         payload = get_decoded_payload(request)
         cash_on_place = CashOnPlaceOrderCartToOrder()
-        cash_on_place.cart_to_order_place(user_id=payload['user_id'],payment_type='cashonhand',shop_id=kwargs['shopid'])
-        return Response({"result":"Order Placed"})
+        orderplace_check = cash_on_place.cart_to_order_place(user_id=payload['user_id'],payment_type='cashonhand',shop_id=kwargs['shopid'])
+        if orderplace_check:
+            return Response({"result":"Order Placed"})
+        return Response({"error":"NO cart products"})
 
 
 class CashOnPlaceOrderCartToOrder:
@@ -124,14 +126,13 @@ class CashOnPlaceOrderCartToOrder:
     def cart_to_order_place(self, user_id, shop_id, payment_type, orderid=None, paymentid=None):
         cart = EndUserCart.objects.filter(user=user_id)
         if not cart:
-            return Response({'result':'No cart Product'})
+            return 0
         enduserorder = EndUserOrders.objects.create(
             shop_id = shop_id,
             user_id = user_id,
             total_amount = self.total_amout_of_cart(user_id=user_id),
             order_status = 'pending',
-            payment_type = payment_type,
-            payment_credit = self.total_amout_of_cart(user_id=user_id)
+            payment_type = payment_type
         )
         for cart_item in cart:
             OrderProducts.objects.create(

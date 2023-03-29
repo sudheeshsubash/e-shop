@@ -4,7 +4,7 @@ from . import views
 
 
 urlpatterns = [
-    
+    path('commonlogin/',views.CommonLogin.as_view(),name='commonlogin'),
     path('loginlogout/',views.LoginSuperAdminEndUserShopAdminShopStaff.as_view(),name='login'),
     path('dashbord/',views.SuperAdminDashBord.as_view(),name='admindashbord'),
     path('<int:shopid>/blockunblock/',views.ShopBlcokUnblock.as_view(),name='blockunblock'),
