@@ -17,8 +17,10 @@ class OrderProductsSerializer(serializers.ModelSerializer):
 
 
 
-class ChangeStatusSerializer(serializers.ModelSerializer):
+class ChangeStatusSerializer(serializers.Serializer):
+
     payment = serializers.IntegerField()
+    payment_type = serializers.CharField(max_length=50)
 
 
 

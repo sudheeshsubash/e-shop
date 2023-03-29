@@ -12,41 +12,30 @@ from shopadmin.serializers import RegistrationShopDetailsOtpConfirmationSerializ
 from .serializers import AddGlobelShopCategorySerializers,ProductCategorySerializers
 from superadmin.otps import otp
 from django.contrib.auth.hashers import make_password
-
-
-class CommonLogin(APIView):
-    '''
-    this is login for all roles superadmin,
-    eshopadmin, eshopstaff, enduser
-    '''
-    def post(self, request):
-        if request.user.is_authenticated:
-            return Response({'status':'already login'})
-        login_serializer_data = LoginSerializer(request.data)
-        if login_serializer_data.validate():
-            username = login_serializer_data.data.get('username')
-            password = login_serializer_data.data.get('password')
-            users = authenticate(username=username,password=password)
-            if users is not None:
-                token = get_tokens_for_user(user=users)
-                login(request,users)
-                return Response({'token':token},status=status.HTTP_200_OK)
-            return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
+from .paginations import CustomPageNumberPagination
 
 
 
-class StaffRegistration(APIView):
-        def post(self, request):
-            registration_form_data_serializer = StaffRegistrationSerializer(data=request.data)
-            if registration_form_data_serializer.is_valid(raise_exception=True):
-                request.session['username'] = registration_form_data_serializer.data.get('username')
-                request.session['password'] = registration_form_data_serializer.data.get('password')
-                request.session['phone_number'] = registration_form_data_serializer.data.get('phone_number')
-                request.session['shop_category'] = registration_form_data_serializer.data.get('shop_category')
-
-                return Response({"otp":f'otp sended to phone'})
 
 
+# class CommonLogin(APIView):
+#     '''
+#     this is login for all roles superadmin,
+#     eshopadmin, eshopstaff, enduser
+#     '''
+#     def post(self, request):
+#         if request.user.is_authenticated:
+#             return Response({'status':'already login'})
+#         login_serializer_data = LoginSerializer(request.data)
+#         if login_serializer_data.validate():
+#             username = login_serializer_data.data.get('username')
+#             password = login_serializer_data.data.get('password')
+#             users = authenticate(username=username,password=password)
+#             if users is not None:
+#                 token = get_tokens_for_user(user=users)
+#                 login(request,users)
+#                 return Response({'token':token},status=status.HTTP_200_OK)
+#             return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
 
 
 
@@ -56,7 +45,7 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
     this is login for all roles superadmin,
     eshopadmin, eshopstaff, enduser
     '''
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return Response({'status':'already login'})
         login_serializer_data = LoginSerializer(request.data)
@@ -69,8 +58,9 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
                     token = get_tokens_for_user(user=users)
                     login(request,users)
                     return Response({'token':token},status=status.HTTP_200_OK)
-            return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error':f'username and password is not correct'},status=status.HTTP_401_UNAUTHORIZED)
         
+
 
     @permission_classes([CustomAdminPermission])
     def delete(self, request):
@@ -102,7 +92,6 @@ class ShopBlcokUnblock(APIView):
     permission_classes=[CustomAdminPermission]
 
     def patch(self, request, *args, **kwargs):
-
         try:
             shop_query = ShopDetails.objects.get(id=kwargs['shopid'])
         except ShopDetails.DoesNotExist:
@@ -114,7 +103,7 @@ class ShopBlcokUnblock(APIView):
             return Response({'response':f'{shop_query.username} is blocked'},status=status.HTTP_200_OK)
         shop_query.is_active=True
         shop_query.save()
-        return Response({'response':f'{shop_query.username} is  Unblocked'},status=status.HTTP_200_OK)
+        return Response({'response':f'{shop_query.username} is Unblocked'},status=status.HTTP_200_OK)
 
 
 
@@ -123,13 +112,13 @@ class ShopCategoryView(APIView):
     permission_classes = [CustomAdminPermission]
 
     def get(self, request, *args, **kwargs):
+        pagination = CustomPageNumberPagination()
         try:
             shopcategory_from_database = ShopCategorys.objects.all()
         except ShopCategorys.DoesNotExist:
             return Response({'error':'no main categorys'})
-        
-        shopcategory_serializer = MainCategoryShopCategorySerializer(shopcategory_from_database,many=True)
-        return Response(shopcategory_serializer.data)
+        query_page = pagination.paginate_queryset(shopcategory_from_database,request)
+        return pagination.get_paginated_response(MainCategoryShopCategorySerializer(query_page,many=True).data)
     
 
 
@@ -263,9 +252,15 @@ class GlobelShopCategory(APIView):
     permission_classes = [CustomAdminPermission]
 
     def get(self, request, *args, **kwargs):
-        product_category = ProductsCategorys.objects.filter(shop__isnull=True)
-        if not product_category:
-            return Response({'error':"NO Globel product category"})
+        shop = request.query_params.get('shop')
+        if shop:
+            product_category = ProductsCategorys.objects.filter(shop=shop)
+            if not product_category:
+                return Response({'error':"NO Custom product category is available"})
+        else:
+            product_category = ProductsCategorys.objects.filter(shop__isnull=True)
+            if not product_category:
+                return Response({'error':"NO Globel product category"})
         product_category_serializer = ProductCategorySerializer(product_category,many=True)
         return Response({"result":product_category_serializer.data})
 
@@ -277,7 +272,6 @@ class AddGlobelShopCategory(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response({"product_category_name":"required field","shop_category":"required field"})
-
 
 
     def post(self, request, *args, **kwargs):

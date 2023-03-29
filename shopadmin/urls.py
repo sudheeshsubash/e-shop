@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('',views.ShopAdminDashBord.as_view(),name='shopdashbord'),
+    path('staff/register/',views.StaffRegistration.as_view(),name='staff'),
     path('login/',views.ShopAdminLogin.as_view(),name='login'),
     path('productcategory/',views.ViewAllProductCategoryGlobelAndCustomCategorys.as_view(),name='productcategory'),
     path('productcategory/add/',views.ProductCategoryAdd.as_view(),name='productcategoryadd'),

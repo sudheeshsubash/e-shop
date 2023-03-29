@@ -8,7 +8,7 @@ from django_filters import rest_framework as filters
 from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user
 from .serializers import LoginSerializer
 from django.contrib.auth import authenticate
-from superadmin.models import ShopStaff
+from superadmin.models import ShopStaff,CustomUser
 
 
 class LoginStaff(APIView):
@@ -94,23 +94,27 @@ class ViewOrderDetails(APIView):
 
 class ConfirmOrderOrChangeStatus(APIView):
 
-    permission_classes = [CustomShopStaffPermission]
+    # permission_classes = [CustomShopStaffPermission]
 
     def get(self, request, *args, **kwargs):
         payment_type_list = ['pending','cancel','complete','refund']
         return Response({"result":payment_type_list})
 
     def patch(self, request, *args, **kwargs):
-        payload = get_decoded_payload(request)
+        # payload = get_decoded_payload(request)
+        print(kwargs['orderid'])
         try:
-            order_product = EndUserOrders.objects.get(order=kwargs['orderid'])
+            order_product = EndUserOrders.objects.get(id=kwargs['orderid'])
             if order_product.payment_type == 'online':
                 raise Exception
         except Exception:
             return Response({"error":"orderid is not valid"})
+        
         payment_change_serializer = ChangeStatusSerializer(request.data)
-        order_product.staff = payload['user_id']
+        order_product.staff_id = 4
         order_product.payment_credit = payment_change_serializer.data.get('payment')
+        order_product.payment_type = payment_change_serializer.data.get('payment_type')
+        order_product.save()
         return Response({"result":"Payment Details Updated"})
 
 

@@ -3,14 +3,35 @@ from rest_framework.response import Response
 from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user,check_jwt_user_id_kwargs_id
 from superadmin.custompermissions import CustomShopAdminPermission
 from .serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer,EditProductCategorySerializer
-from .serializers import RegistrationShopDetailsOtpConfirmationSerializer,ProductCategorySerializer,AddProductCategorySerializer
-from superadmin.models import ShopCategorys,ShopDetails,ProductsCategorys
+from .serializers import RegistrationShopDetailsOtpConfirmationSerializer,ProductCategorySerializer,AddProductCategorySerializer,StaffRegistrationSerializer
+from superadmin.models import ShopCategorys,ShopDetails,ProductsCategorys,ShopStaff,CustomUser
 from superadmin.otps import otp
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from superadmin.serializers import LoginSerializer
 from django.contrib.auth import authenticate,login,logout
 from rest_framework import status
+
+
+
+
+class StaffRegistration(APIView):
+    def post(self, request):
+        registration_form_data_serializer = StaffRegistrationSerializer(data=request.data)
+        if registration_form_data_serializer.is_valid(raise_exception=True):
+            if registration_form_data_serializer.data.get('password') != registration_form_data_serializer.data.get('password2'):
+                return Response({"error":"password is not valid"})
+            staffdetails = CustomUser.objects.create(
+                username = registration_form_data_serializer.data.get('username'),
+                password = registration_form_data_serializer.data.get('password'),
+                phone_number = registration_form_data_serializer.data.get('phone_number'),
+                role = 'shopstaff',
+            )
+            ShopStaff.objects.create(
+                shop_id = staffdetails.id
+            )
+            return Response({"result":"new staff registed"})
+
 
 
 

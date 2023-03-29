@@ -11,7 +11,7 @@ from superadmin.tokengeneratedecode import query_param_token_decode,check_online
 
 
 
-class OnlinePlaceORder(APIView):
+class OnlinePlaceOrder(APIView):
     def get(self, request, *args, **kwargs):
         jwt = request.query_params.get('jwt')
         if jwt is None:
