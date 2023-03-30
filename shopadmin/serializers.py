@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from superadmin.models import ProductImages,ShopCategorys,ShopDetails,ProductsCategorys
+from superadmin.models import ShopCategorys,ShopDetails,ProductsCategorys,CustomUser,ShopStaff
 import re
+from django.contrib.auth.hashers import make_password
 
 
 class ShopCategoryOrMagerCategorySerializer(serializers.ModelSerializer):
@@ -75,60 +76,53 @@ class RegistrationShopDetailsSerializer(serializers.ModelSerializer):
 
 class StaffRegistrationSerializer(serializers.ModelSerializer):
     '''
-    
+
     '''
     password2 = serializers.CharField(max_length=20)
     class Meta:
-        model = ShopDetails
+        model = CustomUser
         fields = [
-            'username','password','phone_number',
-            'password2',
+            'id',
+            'username','password',
+            'phone_number','password2'
         ]
-    
-    # def validate(self, attrs):
+
+    def validate(self, attrs):
         
-    #     username,password,phone_number,place, =  attrs.get('username'),attrs.get('password'),attrs.get('phone_number'),attrs.get('place')
-    #     address,ownername,email,password2 = attrs.get('address'),attrs.get('ownername'),attrs.get('email'),attrs.get('password2')
+        username,password = attrs.get('username'),attrs.get('password')
+        phone_number,password2 = attrs.get('phone_number'),attrs.get('password2')
 
-    #     validationerror = dict() # this variable store all errors and finnaly raise all errors
+        validationerror = dict() # this variable store all errors and finnaly raise all errors
 
-    #     # validation start
-    #     if not re.match(r"^[a-zA-Z\s0-9]+$",password):
-    #         validationerror['password']={f"{password}":"Enter a valid password. This value may contain a-z,A-Z,0-9,Whitespace."}
+        # validation start
+        if not re.match(r"^[a-zA-Z\s0-9]+$",password):
+            validationerror['password']={f"{password}":"Enter a valid password. This value may contain a-z,A-Z,0-9,Whitespace."}
 
-    #     if not re.match(r"^[a-zA-Z\s0-9]+$",password2):
-    #         validationerror['password2']={f"{password2}":"Enter a valid password. This value may contain a-z,A-Z,0-9,Whitespace."}
+        if not re.match(r"^[a-zA-Z\s0-9]+$",password2):
+            validationerror['password2']={f"{password2}":"Enter a valid password. This value may contain a-z,A-Z,0-9,Whitespace."}
         
-    #     if password != password2:
-    #         raise serializers.ValidationError({"password":f'password , password2 is not same'})
+        if password != password2:
+            raise serializers.ValidationError({"password":f'password , password2 is not same'})
         
 
-    #     if not re.match(r"^[a-zA-Z0-9\s]+$",username):
-    #         validationerror['username']={f"{username}":'Enter a valid username. This value may contain only letters'}
+        if not re.match(r"^[a-zA-Z0-9\s]+$",username):
+            validationerror['username']={f"{username}":'Enter a valid username. This value may contain only letters'}
 
-    #     if len(str(phone_number)) != 10:
-    #         validationerror['phon_number'] = {f'{phone_number}':'Enter a valid phone_number. This value may contain 10 length.'}
+        if len(str(phone_number)) != 10:
+            validationerror['phon_number'] = {f'{phone_number}':'Enter a valid phone_number. This value may contain 10 length.'}
 
-    #     if not re.match(r"^[a-zA-Z\s]+$",place):
-    #         validationerror['place'] = {f"{place}":'Enter a valid place. This value may contain only letters'}
-
-    #     if re.match(r"^[a-zA-Z0-9\s]$",address):
-    #         validationerror['address'] = {f"{address}":'Enter a valid address. This value may contain a-z,A-Z,09,whitespace.'}
-
-    #     if not re.match(r"^[a-zA-Z\s]+$",ownername):
-    #         validationerror['ownername'] = {f"{username}":'Enter a valid username. This value may contain only letters'}
-
-    #     if not re.match("^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,3})$",email):
-    #         validationerror['email'] = {f"{email}":'Enter a valid email.'}
-
-    #     if len(validationerror) != 0:
-    #         raise serializers.ValidationError(validationerror)
-    #     return attrs
+        if len(validationerror) != 0:
+            raise serializers.ValidationError(validationerror)
+        return attrs
    
 
-
-
-
+    def save(self):
+        return CustomUser.objects.create(
+            username = self.data.get('username'),
+            password = make_password(self.data.get('password')),
+            phone_number = self.data.get('phone_number'),
+            role = 'shopstaff',
+        )
 
 
 

@@ -57,3 +57,9 @@ def check_online_place_order(token,kwargs):
     payload = jwt.decode(token, SECRET_KEY,algorithms=['HS256'])
     user = UsersDetails.objects.get(id=payload['user_id'])
     return not user.shop.id == kwargs['shopid']
+
+def check_not_superadmin(super_admin_id):
+    user = CustomUser.objects.get(id=super_admin_id)
+    if user.is_superuser:
+        return False
+    return True

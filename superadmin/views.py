@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from .serializers import LoginSerializer,MainCategoryShopCategorySerializer,ShopRegistrationOtpSerializer
 from django.contrib.auth import authenticate,login,logout
-from .tokengeneratedecode import get_tokens_for_user,check_jwt_user_id_kwargs_id
+from .tokengeneratedecode import get_tokens_for_user,check_jwt_user_id_kwargs_id,get_decoded_payload,check_not_superadmin
 from rest_framework.response import Response
 from rest_framework import status
 from .models import ShopDetails,ShopCategorys,ProductsCategorys
@@ -13,29 +13,6 @@ from .serializers import AddGlobelShopCategorySerializers,ProductCategorySeriali
 from superadmin.otps import otp
 from django.contrib.auth.hashers import make_password
 from .paginations import CustomPageNumberPagination
-
-
-
-
-
-# class CommonLogin(APIView):
-#     '''
-#     this is login for all roles superadmin,
-#     eshopadmin, eshopstaff, enduser
-#     '''
-#     def post(self, request):
-#         if request.user.is_authenticated:
-#             return Response({'status':'already login'})
-#         login_serializer_data = LoginSerializer(request.data)
-#         if login_serializer_data.validate():
-#             username = login_serializer_data.data.get('username')
-#             password = login_serializer_data.data.get('password')
-#             users = authenticate(username=username,password=password)
-#             if users is not None:
-#                 token = get_tokens_for_user(user=users)
-#                 login(request,users)
-#                 return Response({'token':token},status=status.HTTP_200_OK)
-#             return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
 
 
 
@@ -80,8 +57,14 @@ class SuperAdminDashBord(APIView):
     '''
     permission_classes=[CustomAdminPermission]
 
-    def get(self, request):
-        return Response('superadmin dashbord')
+    def get(self, request, *args, **kwargs):
+        payload = get_decoded_payload(request)
+        if check_not_superadmin(payload['user_id']):
+            return Response({'error':"Thiss is not superadmin"})
+        shop_category_query_list_result = dict()
+        for shop_category_query in ShopCategorys.objects.all():
+            shop_category_query_list_result[f"{shop_category_query.shop_category_name}"] = ShopDetails.objects.filter(shop_category=shop_category_query.id).count()
+        return Response({"result":shop_category_query_list_result,"graph":"this graph is check how many user under the shopcategory"})
 
 
 
@@ -92,6 +75,8 @@ class ShopBlcokUnblock(APIView):
     permission_classes=[CustomAdminPermission]
 
     def patch(self, request, *args, **kwargs):
+        if check_not_superadmin:
+            return Response({"error":"This is not a superadmin"})
         try:
             shop_query = ShopDetails.objects.get(id=kwargs['shopid'])
         except ShopDetails.DoesNotExist:
@@ -256,7 +241,7 @@ class GlobelShopCategory(APIView):
         if shop:
             product_category = ProductsCategorys.objects.filter(shop=shop)
             if not product_category:
-                return Response({'error':"NO Custom product category is available"})
+                return Response({'error':"N Custom product category is available"})
         else:
             product_category = ProductsCategorys.objects.filter(shop__isnull=True)
             if not product_category:

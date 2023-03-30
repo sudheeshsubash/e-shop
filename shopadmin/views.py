@@ -15,23 +15,21 @@ from rest_framework import status
 
 
 
-class StaffRegistration(APIView):
-    def post(self, request):
-        registration_form_data_serializer = StaffRegistrationSerializer(data=request.data)
-        if registration_form_data_serializer.is_valid(raise_exception=True):
-            if registration_form_data_serializer.data.get('password') != registration_form_data_serializer.data.get('password2'):
-                return Response({"error":"password is not valid"})
-            staffdetails = CustomUser.objects.create(
-                username = registration_form_data_serializer.data.get('username'),
-                password = registration_form_data_serializer.data.get('password'),
-                phone_number = registration_form_data_serializer.data.get('phone_number'),
-                role = 'shopstaff',
-            )
-            ShopStaff.objects.create(
-                shop_id = staffdetails.id
-            )
-            return Response({"result":"new staff registed"})
 
+class StaffRegistrationView(APIView):
+
+    permission_classes = [CustomShopAdminPermission]
+
+    def post(self, request, *args, **kwargs):
+        registration_form_data = StaffRegistrationSerializer(data=request.data)
+        if registration_form_data.is_valid(raise_exception=True):
+            staff_query = registration_form_data.save()
+            staff = CustomUser.objects.get(username=staff_query)
+            print(staff)
+            # ShopStaff.objects.create(
+            #     shop = staff_query.id
+            # )
+            return Response({"result":"New staff created"})
 
 
 
@@ -43,8 +41,8 @@ class ShopAdminDashBord(APIView):
     
     def get(self, request, *args, **kwargs):
         if check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response('shop admin dashbord')
-        return Response({'result':'You dont have permission for access this api'})
+            return Response({"result":'shop admin dashbord'})
+        return Response({'error':'You dont have permission for access this api'})
 
 
 
@@ -63,8 +61,7 @@ class ShopAdminLogin(APIView):
                     token = get_tokens_for_user(user=users)
                     login(request,users)
                     return Response({'token':token},status=status.HTTP_200_OK)
-            return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
-        return Response('login')
+            return Response({'error':f'username and password is not correct'},status=status.HTTP_401_UNAUTHORIZED)
 
 
 

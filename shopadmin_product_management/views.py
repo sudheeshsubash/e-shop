@@ -148,7 +148,6 @@ class ShopProductImageEdit(APIView):
             product_image_serializer.save()
             return Response({'result':f"product image update successfully {product_image_serializer.data}"})
         
-        
 
 
 class ShopProductDetails(APIView):

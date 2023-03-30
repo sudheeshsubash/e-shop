@@ -3,10 +3,10 @@ from . import views
 
 urlpatterns = [
     path('',views.ShopAdminDashBord.as_view(),name='shopdashbord'),
-    path('staff/register/',views.StaffRegistration.as_view(),name='staff'),
+    path('staff/register/',views.StaffRegistrationView.as_view(),name='staff'),
     path('login/',views.ShopAdminLogin.as_view(),name='login'),
-    path('productcategory/',views.ViewAllProductCategoryGlobelAndCustomCategorys.as_view(),name='productcategory'),
-    path('productcategory/add/',views.ProductCategoryAdd.as_view(),name='productcategoryadd'),
-    path('productcategory/edit/<int:categoryid>/',views.ProductCategoryEdit.as_view(),name='productcategoryedit'),
+    path('productcategory/view/',views.ViewAllProductCategoryGlobelAndCustomCategorys.as_view(),name='productcategory'),
+    path('productcategory/',views.ProductCategoryAdd.as_view(),name='productcategoryadd'),
+    path('productcategory/<int:categoryid>/',views.ProductCategoryEdit.as_view(),name='productcategoryedit'),
 
 ]

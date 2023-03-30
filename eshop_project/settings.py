@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'user_orders',
     'user_details',
     'shop_staff',
+    'superadmin_details',
+    
 
 ]
 
