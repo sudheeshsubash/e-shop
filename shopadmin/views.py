@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user,check_jwt_user_id_kwargs_id
 from superadmin.custompermissions import CustomShopAdminPermission
-from .serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer,EditProductCategorySerializer
+from .serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer,EditProductCategorySerializer,ShopStaffSerializer
 from .serializers import RegistrationShopDetailsOtpConfirmationSerializer,ProductCategorySerializer,AddProductCategorySerializer,StaffRegistrationSerializer
 from superadmin.models import ShopCategorys,ShopDetails,ProductsCategorys,ShopStaff,CustomUser
 from superadmin.otps import otp
@@ -11,8 +11,6 @@ from django.db.models import Q
 from superadmin.serializers import LoginSerializer
 from django.contrib.auth import authenticate,login,logout
 from rest_framework import status
-
-
 
 
 
@@ -25,11 +23,51 @@ class StaffRegistrationView(APIView):
         if registration_form_data.is_valid(raise_exception=True):
             staff_query = registration_form_data.save()
             staff = CustomUser.objects.get(username=staff_query)
-            print(staff)
+            print(staff.id)
             # ShopStaff.objects.create(
             #     shop = staff_query.id
             # )
-            return Response({"result":"New staff created"})
+            return Response({"result":"New staff created"},status=status.HTTP_201_CREATED)
+
+
+class ShopStaffView(APIView):
+
+    permission_classes = [CustomShopAdminPermission]
+
+    def get(self, request, *args, **kwargs):
+        shop_staff_query = ShopStaff.objects.filter(shop=kwargs['shopid'])
+        shop_serializer = ShopStaffSerializer(shop_staff_query,many=True)
+        return Response({"result":shop_serializer.data})
+
+
+
+class ShopStaffEdit(APIView):
+
+    permission_classes = [CustomShopAdminPermission]
+
+    def patch(self, request, *args, **kwargs):
+        try:
+            shop_details = ShopStaff.objects.get(id=kwargs['staffid'])
+        except ShopStaff.DoesNotExist:
+            return Response({"error":"staff is not exist"})
+        if shop_details.is_active:
+            shop_details.is_active = False
+            shop_details.save()
+            return Response({"result":f"{shop_details.username} is blocked"})
+        shop_details.is_active=True
+        shop_details.save()
+        return Response({'result':f"{shop_details.username} is unblocked"})
+
+
+    def put(self, request, *args, **kwargs):
+        pass
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            ShopStaff.objects.get(id=kwargs['staffid']).delete()
+        except ShopStaff.DoesNotExist:
+            return Response({"error":f"{kwargs['staffid']} is not valid"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"result":"Shop staff details deleted"},status=status.HTTP_200_OK)
 
 
 
@@ -41,14 +79,14 @@ class ShopAdminDashBord(APIView):
     
     def get(self, request, *args, **kwargs):
         if check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response({"result":'shop admin dashbord'})
-        return Response({'error':'You dont have permission for access this api'})
+            return Response({"result":'shop admin dashbord'},status=status.HTTP_200_OK)
+        return Response({'error':'You dont have permission for access this api'},status=status.HTTP_400_BAD_REQUEST)
 
 
 
 class ShopAdminLogin(APIView):
     '''
-    
+    shop admin login
     '''
     def get(self, request, *args, **kwargs):
         login_serializer_data = LoginSerializer(request.data)
@@ -73,14 +111,13 @@ class ViewAllProductCategoryGlobelAndCustomCategorys(APIView):
 
     def get(self, request, *args, **kwargs):
         if not check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response({'error':"You have no permission for access this shop method"})
-        try:
-            product_category_query = ProductsCategorys.objects.filter(Q(shop__isnull=True)|Q(shop=kwargs['shopid']))
-        except ProductsCategorys.DoesNotExist:
-            return Response({'error':'No Product categorys'})
+            return Response({'error':"You have no permission for access this shop method"},status=status.HTTP_400_BAD_REQUEST)
+        product_category_query = ProductsCategorys.objects.filter(Q(shop__isnull=True)|Q(shop=kwargs['shopid']))
+        if not product_category_query:
+            return Response({'error':f'No Products Category, is empty'},status=status.HTTP_400_BAD_REQUEST)
         
         product_category_serializer = ProductCategorySerializer(product_category_query,many=True)
-        return Response(product_category_serializer.data)
+        return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
 
 
 
@@ -91,62 +128,59 @@ class ProductCategoryEdit(APIView):
     def get(self, request, *args, **kwargs):
 
         if not check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response({'error':"You have no permission for access this shop method"})
-
-        try:
-            product_category_query = ProductsCategorys.objects.filter(id=kwargs['categoryid'],shop=kwargs['shopid']).values('product_category_name')
-        except ProductsCategorys.DoesNotExist:
-            return Response({'error':'No exist Product categorys'})
-        
+            return Response({'error':"You have no permission for access this shop method"},status=status.HTTP_400_BAD_REQUEST)
+        product_category_query = ProductsCategorys.objects.filter(id=kwargs['categoryid'],shop=kwargs['shopid']).values('product_category_name')
+        if not product_category_query:
+            return Response({'error':f'{kwargs["categoryid"]} is not valid'},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = EditProductCategorySerializer(product_category_query,many=True)
-        return Response(product_category_serializer.data)
+        return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
+
 
 
     def patch(self, request, *args, **kwargs):
         
         if not check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response({'error':"You have no permission for access this shop method"})
-
+            return Response({'error':"You have no permission for access this shop method"},status=status.HTTP_400_BAD_REQUEST)
         try:
             customize_product_category_query = ProductsCategorys.objects.get(id=kwargs['categoryid'],shop=kwargs['shopid'])
         except ProductsCategorys.DoesNotExist:
-            return Response({'error':f'{kwargs["categoryid"]} is not valid'})
-        
+            return Response({'error':f'{kwargs["categoryid"]} is not valid'},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = EditProductCategorySerializer(customize_product_category_query,data=request.data)
         if product_category_serializer.is_valid(raise_exception=True):
             product_category_serializer.save()
-            return Response(product_category_serializer.data)
-        return Response({"error":'Enter a valid credetials'})
+            return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
+        return Response({"error":'Enter a valid credetials'},status=status.HTTP_400_BAD_REQUEST)
     
+
 
     def delete(self, request, *args, **kwargs):
         try:
             ProductsCategorys.objects.get(id=kwargs['categoryid']).delete()
         except ProductsCategorys.DoesNotExist:
-            return Response({'error':'category Not exist'})
-        return Response({'result':"category is deleted"})
+            return Response({'error':'category Not exist'},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'result':"category is deleted"},status=status.HTTP_200_OK)
+
 
 
 class ProductCategoryAdd(APIView):
 
+    permission_classes = [CustomShopAdminPermission]
+
     def get(self, request, *args, **kwargs):
 
         if not check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response({'error':"You have no permission for access this shop method"})
-
-        return Response({'product_category_name':'required field'})
+            return Response({'error':"You have no permission for access this shop method"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'result':{'required field':'product_category_name'}},status=status.HTTP_200_OK)
 
 
     def post(self, request, *args, **kwargs):
         
         if not check_jwt_user_id_kwargs_id(request,kwargs['shopid']):
-            return Response({'error':"You have no permission for access this shop method"})
-
+            return Response({'error':"You have no permission for access this shop method"},status=status.HTTP_400_BAD_REQUEST)
         try:
             shop_details = ShopDetails.objects.get(id=kwargs['shopid'])
         except ShopDetails.DoesNotExist:
-            return Response({'error':'shop is not valid'})
-        
+            return Response({'error':'shop is not valid'},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = AddProductCategorySerializer(data=request.data)
         if product_category_serializer.is_valid(raise_exception=True):
             custom_product_category = ProductsCategorys.objects.create(
@@ -154,160 +188,4 @@ class ProductCategoryAdd(APIView):
                 shop=shop_details,shop_category=shop_details.shop_category
             )
             custom_product_category_serializer = ProductCategorySerializer(custom_product_category)
-            return Response(custom_product_category_serializer.data)
-        
-
-
-
-
-
-
-#     # def get(self, request):
-#     #     takeshopid_from_token = get_decoded_payload(request)
-#     #     try:
-#     #         product_category_query = ProductsCategorys.objects.filter(Q(shop__isnull=True)|Q(shop=takeshopid_from_token['user_id']))
-#     #     except ProductsCategorys.DoesNotExist:
-#     #         return Response({'error':'No Product categorys'})
-        
-#     #     product_category_serializer = ProductCategorySerializer(product_category_query,many=True)
-#     #     return Response(product_category_serializer.data)
-
-
-
-# class CustomizeProductCategoryOrEditAddCategory(APIView):
-#     '''
-#     this is possible for (Add,Edit)(GET,POST,PATCH) methods
-#     '''
-#     permission_classes = [CustomShopAdminPermission]
-
-#     def get(self, request, *args, **kwargs):
-
-#         if kwargs['type'] == 'add':
-#            return Response({'result':'required form field, Enter the value "product_category_name"'})
-
-#         if kwargs['type'] != 'edit':
-#             return Response({'not valid type'})
-        
-#         custom_product_category_id = request.query_params.get('categoryid')
-#         takeshopid_from_token = get_decoded_payload(request)
-#         if custom_product_category_id is None:
-#             return  Response({'pass (categoryid) in query param'})
-#         try:
-#             product_category_query = ProductsCategorys.objects.filter(id=custom_product_category_id,shop=takeshopid_from_token['user_id']).values('product_category_name')
-#         except ProductsCategorys.DoesNotExist:
-#             return Response({'error':'No exist Product categorys'})
-        
-#         product_category_serializer = EditProductCategorySerializer(product_category_query,many=True)
-#         return Response(product_category_serializer.data)
-
-
-
-#     # def get(self, request):
-#     #     customize_type = request.query_params.get('type')
-#     #     if customize_type is None:
-#     #         return Response({'pass query param value like ?type=add (or) edit'})
-        
-#     #     if customize_type == 'add':
-#     #         return Response({'result':'required form field, Enter the value "product_category_name"'})
-        
-#     #     if customize_type != 'edit':
-#     #         return Response({'not valid type'})
-        
-#     #     custom_product_category_id = request.query_params.get('categoryid')
-#     #     takeshopid_from_token = get_decoded_payload(request)
-#     #     if custom_product_category_id is None:
-#     #         return  Response({'pass (categoryid) in query param'})
-#     #     try:
-#     #         product_category_query = ProductsCategorys.objects.filter(id=custom_product_category_id,shop=takeshopid_from_token['user_id']).values('product_category_name')
-#     #     except ProductsCategorys.DoesNotExist:
-#     #         return Response({'error':'No exist Product categorys'})
-        
-#     #     product_category_serializer = EditProductCategorySerializer(product_category_query,many=True)
-#     #     return Response(product_category_serializer.data)
-        
-
-#     def post(self, request, *args, **kwargs):
-#         if kwargs['type'] != 'add':
-#             Response({'error':'api error'})
-#         try:
-#             shop_details = ShopDetails.objects.get(id=kwargs['shopid'])
-#         except ShopDetails.DoesNotExist:
-#             return Response({'error':'shop is not valid'})
-        
-#         product_category_serializer = AddProductCategorySerializer(data=request.data)
-#         if product_category_serializer.is_valid(raise_exception=True):
-#             custom_product_category = ProductsCategorys.objects.create(
-#                 product_category_name = product_category_serializer.data.get('product_category_name'),
-#                 shop=shop_details,shop_category=shop_details.shop_category
-#             )
-#             custom_product_category_serializer = ProductCategorySerializer(custom_product_category)
-#             return Response(custom_product_category_serializer.data)
-
-    
-
-#     # def post(self, request):
-#     #     customize_type = request.query_params.get('type')
-#     #     if customize_type is None:
-#     #         return Response({'pass query param value like ?type=add'})
-        
-#     #     if customize_type != 'add':
-#     #         return Response({'only ?type=add is valid of post method'})
-        
-#     #     takeshopid_from_token = get_decoded_payload(request)
-
-        
-#     #     try:
-#     #         shop_details = ShopDetails.objects.get(id=takeshopid_from_token['user_id'])
-#     #     except ShopDetails.DoesNotExist:
-#     #         return Response({'error':'shop is not valid'})
-        
-#     #     product_category_serializer = AddProductCategorySerializer(data=request.data)
-#     #     if product_category_serializer.is_valid(raise_exception=True):
-#     #         custom_product_category = ProductsCategorys.objects.create(
-#     #             product_category_name = product_category_serializer.data.get('product_category_name'),
-#     #             shop=shop_details,shop_category=shop_details.shop_category
-#     #         )
-#     #         custom_product_category_serializer = ProductCategorySerializer(custom_product_category)
-#     #         return Response(custom_product_category_serializer.data)
-
-
-
-#     # def patch(self, request):
-#     #     customize_type = request.query_params.get('type')
-#     #     product_category_id = request.query_params.get('productid')
-#     #     takeshopid_from_token = get_decoded_payload(request)
-
-#     #     if customize_type is None or product_category_id is None:
-#     #         return Response({'result':'pass (type) and (productid) to query params'})
-#     #     if customize_type != 'edit':
-#     #         return Response({'result':'only ?type=edit is valid'})
-        
-#     #     try:
-#     #         customize_product_category_query = ProductsCategorys.objects.get(id=product_category_id,shop=takeshopid_from_token['user_id'])
-#     #     except ProductsCategorys.DoesNotExist:
-#     #         return Response({'error':f'{product_category_id} is not valid'})
-        
-#     #     product_category_serializer = EditProductCategorySerializer(customize_product_category_query,data=request.data)
-#     #     if product_category_serializer.is_valid(raise_exception=True):
-#     #         product_category_serializer.save()
-#     #         return Response(product_category_serializer.data)
-#     #     return Response({"error":'Enter a valid credetials'})
-    
-    
-#     def patch(self, request, *args, **kwargs):
-#         product_category_id = request.query_params.get('productid')
-#         if product_category_id is None:
-#             return Response({'result':'pass (?productid=value) to query params'})
-#         if kwargs['type'] != 'edit':
-#             return Response({'error':'api error'})
-        
-#         try:
-#             customize_product_category_query = ProductsCategorys.objects.get(id=product_category_id,shop=kwargs['shopid'])
-#         except ProductsCategorys.DoesNotExist:
-#             return Response({'error':f'{product_category_id} is not valid'})
-        
-#         product_category_serializer = EditProductCategorySerializer(customize_product_category_query,data=request.data)
-#         if product_category_serializer.is_valid(raise_exception=True):
-#             product_category_serializer.save()
-#             return Response(product_category_serializer.data)
-#         return Response({"error":'Enter a valid credetials'})
+            return Response({"result":custom_product_category_serializer.data},status=status.HTTP_200_OK)

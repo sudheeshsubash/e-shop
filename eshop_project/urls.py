@@ -15,12 +15,12 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('',include('superadmin.urls')),
-    path('<int:shopid>/',include('shopadmin.urls')),
-    path('<int:shopid>/product/',include('shopadmin_product_management.urls')),
-    path('<int:shopid>/user/',include('user.urls')),
-    path('<int:shopid>/user/order/',include('user_orders.urls')),
-    path('<int:shopid>/user/details/',include('user_details.urls')),
-    path('<int:shopid>/staff/',include('shop_staff.urls')),
+    path('shop/<int:shopid>/',include('shopadmin.urls')),
+    path('shop/<int:shopid>/product/',include('shopadmin_product_management.urls')),
+    path('shop/<int:shopid>/user/',include('user.urls')),
+    path('shop/<int:shopid>/user/order/',include('user_orders.urls')),
+    path('shop/<int:shopid>/user/details/',include('user_details.urls')),
+    path('shop/<int:shopid>/staff/',include('shop_staff.urls')),
     path('details/',include('superadmin_details.urls')),
     
 ]

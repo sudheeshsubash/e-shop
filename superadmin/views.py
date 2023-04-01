@@ -24,7 +24,7 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
     '''
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return Response({'status':'already login'})
+            return Response({'status':'already login'},status=status.HTTP_208_ALREADY_REPORTED)
         login_serializer_data = LoginSerializer(request.data)
         if login_serializer_data.validate():
             username = login_serializer_data.data.get('username')
@@ -46,8 +46,8 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
         '''
         if request.user.is_authenticated:
             logout(request=request)
-            return Response({'logout successfuly'})
-        return Response({'login':'pass the access token'})
+            return Response({'logout successfuly'},status=status.HTTP_200_OK)
+        return Response({'login':'pass the jwt token'},status=status.HTTP_204_NO_CONTENT)
         
 
 
@@ -58,13 +58,10 @@ class SuperAdminDashBord(APIView):
     permission_classes=[CustomAdminPermission]
 
     def get(self, request, *args, **kwargs):
-        payload = get_decoded_payload(request)
-        if check_not_superadmin(payload['user_id']):
-            return Response({'error':"Thiss is not superadmin"})
         shop_category_query_list_result = dict()
         for shop_category_query in ShopCategorys.objects.all():
             shop_category_query_list_result[f"{shop_category_query.shop_category_name}"] = ShopDetails.objects.filter(shop_category=shop_category_query.id).count()
-        return Response({"result":shop_category_query_list_result,"graph":"this graph is check how many user under the shopcategory"})
+        return Response({"result":shop_category_query_list_result,"graph":"this graph is check how many user under the shopcategory"},status=status.HTTP_200_OK)
 
 
 
@@ -75,12 +72,10 @@ class ShopBlcokUnblock(APIView):
     permission_classes=[CustomAdminPermission]
 
     def patch(self, request, *args, **kwargs):
-        if check_not_superadmin:
-            return Response({"error":"This is not a superadmin"})
         try:
             shop_query = ShopDetails.objects.get(id=kwargs['shopid'])
         except ShopDetails.DoesNotExist:
-            return Response({'error':f'{kwargs["shopid"]} is not valid'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':f'{kwargs["shopid"]} is not valid'},status=status.HTTP_404_NOT_FOUND)
         
         if shop_query.is_active:
             shop_query.is_active=False
@@ -101,7 +96,7 @@ class ShopCategoryView(APIView):
         try:
             shopcategory_from_database = ShopCategorys.objects.all()
         except ShopCategorys.DoesNotExist:
-            return Response({'error':'no main categorys'})
+            return Response({'error':'No Shop categorys is exist'},status=status.HTTP_404_NOT_FOUND)
         query_page = pagination.paginate_queryset(shopcategory_from_database,request)
         return pagination.get_paginated_response(MainCategoryShopCategorySerializer(query_page,many=True).data)
     
@@ -112,7 +107,7 @@ class AddShopCategory(APIView):
     permission_classes = [CustomAdminPermission]
 
     def get(self, request, *args, **kwargs):
-        return Response({"shop_category_name":'Enter the category name','discribe':'Discribe that category'})
+        return Response({"shop_category_name":'Enter the category name','discribe':'Discribe that category'},status=status.HTTP_200_OK)
 
 
     def post(self, request, *args, **kwargs):
@@ -120,7 +115,7 @@ class AddShopCategory(APIView):
         if category_serializer.is_valid(raise_exception=True):
             category_serializer.save()
             category = Response(category_serializer.data).data
-            return Response(category)
+            return Response(category,status=status.HTTP_200_OK)
 
 
 
@@ -132,30 +127,30 @@ class EditShopCategory(APIView):
         try:
             category_from_database = ShopCategorys.objects.get(id=kwargs['categoryid'])
         except ShopCategorys.DoesNotExist:
-            return Response({'error':f'{kwargs["categoryid"]} is not valid or (categoryi)d is not valid'})
+            return Response({'error':f'{kwargs["categoryid"]} is not valid '},status=status.HTTP_400_BAD_REQUEST)
         
         category_serializer = MainCategoryShopCategorySerializer(category_from_database)
-        return Response(category_serializer.data)
+        return Response({"result":category_serializer.data})
     
 
     def patch(self, request, *args, **kwargs):
         try:
             category_from_database = ShopCategorys.objects.get(id=kwargs['categoryid'])
         except ShopCategorys.DoesNotExist:
-            return Response({'categoryid':f'{kwargs["categoryid"]} is not valid'})
+            return Response({'categoryid':f'{kwargs["categoryid"]} is not valid'},status=status.HTTP_404_NOT_FOUND)
         
         category_serializer = MainCategoryShopCategorySerializer(category_from_database,data=request.data)
         if category_serializer.is_valid(raise_exception=True):
             category_serializer.save()
-            return Response(category_serializer.data)
+            return Response({"result":category_serializer.data},status=status.HTTP_200_OK)
         
     
     def delete(self, request, *args, **kwargs):
         try:
             ShopCategorys.objects.get(id=kwargs['categoryid']).delete()
         except ShopCategorys.DoesNotExist:
-            return Response({"error":"Category is not exist"})
-        return Response({"result":"ShopCategory is deleted"})
+            return Response({"error":"Category is not exist"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"result":"ShopCategory is deleted"},status=status.HTTP_200_OK)
 
 
 
@@ -178,7 +173,7 @@ class ShopRegistration(APIView):
         result['ownername']=''
         result['email']=''
         result['password']=''
-        return Response(result)
+        return Response({"result":result},status=status.HTTP_200_OK)
 
 
     def post(self, request):
@@ -196,7 +191,7 @@ class ShopRegistration(APIView):
             request.session['shop_category'] = registration_form_data_serializer.data.get('shop_category')
             request.session['otpnumber'] = otpnumber()
 
-            return Response({"otp":f'otp sended to phone'})
+            return Response({"otp":f'otp sended to phone'},status=status.HTTP_200_OK)
             
 
 
@@ -205,13 +200,13 @@ class RegistrationOtpConfirm(APIView):
     
     '''
     def get(self, request):
-        return Response({'result':"required value, pass OTP number to query param (otpnumber),"})
+        return Response({'result':{"otp":"required value"}})
 
 
     def post(self, request):
         otp_serializer = ShopRegistrationOtpSerializer(request.data)
         if int(otp_serializer.data.get('otp')) != request.session.get('otpnumber',None):
-            return Response({'result':'otpnumber is not valid'})
+            return Response({'result':'otpnumber is not valid'},status=status.HTTP_200_OK)
         
         shopcategory = ShopCategorys.objects.get(id=request.session.get('shop_category'))
         
@@ -228,9 +223,39 @@ class RegistrationOtpConfirm(APIView):
         )
         request.session.flush()
         shop_serializer = RegistrationShopDetailsOtpConfirmationSerializer(shop,many=False)
-        return Response(shop_serializer.data)
+        return Response({"result":shop_serializer.data},status=status.HTTP_200_OK)
 
 
+
+class ShopsDetailsEdit(APIView):
+    permission_classes = [CustomAdminPermission]
+    def patch(self, request, *args, **kwargs):
+        shop_block_query_param = request.query_params.get('block')
+        print(type(shop_block_query_param))
+        if shop_block_query_param == "True":
+            try:
+                shop = ShopDetails.objects.get(id=kwargs['shopid'])
+            except ShopDetails.DoesNotExist:
+                return Response({"error":f"{kwargs['shopid']} is not valid"})
+            if shop.is_active:
+                shop.is_active = False
+                shop.save()
+                return Response({"result":f"{shop.username} is Block"})
+            shop.is_active = True
+            shop.save()
+            return Response({"result":f"{shop.username} is UnBlock"})
+        elif shop_block_query_param != True:
+            return Response({"error":"Invalid query param"})
+        
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            ShopDetails.objects.get(id=kwargs['shopid']).delete()
+        except ShopDetails.DoesNotExist:
+            return Response({"error":f"{kwargs['shopid']} is not valid"})
+        return Response({"result":"Shop is Deleted"})
+
+    
 
 class GlobelShopCategory(APIView):
 
@@ -241,13 +266,13 @@ class GlobelShopCategory(APIView):
         if shop:
             product_category = ProductsCategorys.objects.filter(shop=shop)
             if not product_category:
-                return Response({'error':"N Custom product category is available"})
+                return Response({'error':"No Custom product category is available"},status=status.HTTP_400_BAD_REQUEST)
         else:
             product_category = ProductsCategorys.objects.filter(shop__isnull=True)
             if not product_category:
-                return Response({'error':"NO Globel product category"})
+                return Response({'error':"NO Globel product category"},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = ProductCategorySerializer(product_category,many=True)
-        return Response({"result":product_category_serializer.data})
+        return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
 
 
 
@@ -256,14 +281,14 @@ class AddGlobelShopCategory(APIView):
     permission_classes = [CustomAdminPermission]
 
     def get(self, request, *args, **kwargs):
-        return Response({"product_category_name":"required field","shop_category":"required field"})
+        return Response({'result':{"product_category_name":"required field","shop_category":"required field"}},status=status.HTTP_200_OK)
 
 
     def post(self, request, *args, **kwargs):
         product_category_serializer = AddGlobelShopCategorySerializers(data=request.data)
         if product_category_serializer.is_valid(raise_exception=True):
             product_category_serializer.save()
-            return Response({"result":product_category_serializer.data})
+            return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
 
 
 
@@ -274,25 +299,25 @@ class EditGlobelShopCategory(APIView):
     def get(self, request, *args, **kwargs):
         product_category_query = ProductsCategorys.objects.filter(id=kwargs["categoryid"])
         if not product_category_query:
-            return Response({"error":"No Product category is exist"})
+            return Response({"error":"No Product categorys is exist"},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = ProductCategorySerializers(product_category_query,many=True)
-        return Response({"result":product_category_serializer.data})
+        return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
 
 
     def patch(self, request, *args, **kwargs):
         try:
             product_category_query = ProductsCategorys.objects.get(id=kwargs["categoryid"])
         except ProductsCategorys.DoesNotExist:
-            return Response({"Error":'product category is not exist'})
+            return Response({"Error":'product category is not exist'},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = ProductCategorySerializers(product_category_query,data=request.data,many=False)
         if product_category_serializer.is_valid(raise_exception=True):
             product_category_serializer.save()
-            return Response({'result':product_category_serializer.data})
+            return Response({'result':product_category_serializer.data},status=status.HTTP_200_OK)
     
 
     def delete(self, request, *args, **kwargs):
         try:
             ProductsCategorys.objects.get(id=kwargs['categoryid']).delete()
         except ProductsCategorys.DoesNotExist:
-            return Response({"error":"product category is not exist"})
-        return Response({"result":f"{kwargs['categoryid']} is deleted"})
+            return Response({"error":"product category is not exist"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"result":f"{kwargs['categoryid']} is deleted"},status=status.HTTP_200_OK)

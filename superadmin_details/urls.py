@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('changepassword/otp/',views.OtpGenerateAndCheck.as_view(),name='otpgeneratevalidate'),
+    path('password/otp/',views.OtpGenerateAndCheck.as_view(),name='otpgeneratevalidate'),
+    path('password/',views.ChangePassword.as_view(),name='changepassword'),
+
     
 ]

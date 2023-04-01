@@ -71,6 +71,14 @@ class RegistrationShopDetailsSerializer(serializers.ModelSerializer):
    
 
 
+class ShopStaffSerializer(serializers.ModelSerializer):
+    '''
+    
+    '''
+    class Meta:
+        model = ShopStaff
+        fields = ['username','shop','phone_number']
+
 
 
 
@@ -105,7 +113,7 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password":f'password , password2 is not same'})
         
 
-        if not re.match(r"^[a-zA-Z0-9\s]+$",username):
+        if not re.match(r"^[a-zA-Z]{1}[a-zA-Z0-9\s]+$",username):
             validationerror['username']={f"{username}":'Enter a valid username. This value may contain only letters'}
 
         if len(str(phone_number)) != 10:

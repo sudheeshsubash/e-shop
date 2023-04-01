@@ -9,6 +9,7 @@ urlpatterns = [
     path('<int:shopid>/blockunblock/',views.ShopBlcokUnblock.as_view(),name='blockunblock'),
     path('registration/',views.ShopRegistration.as_view(),name='registrtion'),
     path('registration/otp/',views.RegistrationOtpConfirm.as_view(),name='registrationotp'),
+    path('superadmin/shop/<int:shopid>/',views.ShopsDetailsEdit.as_view(),name='shopdetails'),
     path('shopcategory/view/',views.ShopCategoryView.as_view(),name="shopcategory"),
     path('shopcategory/',views.AddShopCategory.as_view(),name="addshopcategory"),
     path('shopcategory/<int:categoryid>/',views.EditShopCategory.as_view(),name="editshopcategory"),
