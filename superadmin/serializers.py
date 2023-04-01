@@ -12,8 +12,8 @@ class LoginSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self):
-        username = self.data.get('username',None)
-        password = self.data.get('password',None)
+        username = self.data.get('username')
+        password = self.data.get('password')
 
         validationerror = dict() # validation error variable
         # start validation here
@@ -32,6 +32,7 @@ class LoginSerializer(serializers.ModelSerializer):
     
 
 
+
 class MainCategoryShopCategorySerializer(serializers.ModelSerializer):
     '''
     
@@ -41,7 +42,7 @@ class MainCategoryShopCategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def validate(self, attrs):
-        shop_category_name,discribe = attrs.get('shop_category_name'),attrs.get('discribe')
+        shop_category_name = attrs.get('shop_category_name')
         if not re.match(r"^[a-zA-Z\s]+$",shop_category_name):
             raise serializers.ValidationError({'validationerror':f'{shop_category_name} is not valid'})
 

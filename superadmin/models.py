@@ -86,7 +86,7 @@ class ShopStaff(CustomUser):
     '''
     shop staff
     '''
-    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,null=False,related_name='shopstaff')
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,null=True,related_name='shopstaff')
 
     class Meta:
         verbose_name = 'ShopStaff'

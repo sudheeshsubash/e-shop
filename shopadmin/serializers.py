@@ -125,7 +125,7 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
    
 
     def save(self):
-        return CustomUser.objects.create(
+        return ShopStaff.objects.create(
             username = self.data.get('username'),
             password = make_password(self.data.get('password')),
             phone_number = self.data.get('phone_number'),

@@ -29,6 +29,7 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
         if login_serializer_data.validate():
             username = login_serializer_data.data.get('username')
             password = login_serializer_data.data.get('password')
+            print(type(username))
             users = authenticate(username=username,password=password)
             if users is not None:
                 if users.is_superuser:
@@ -62,28 +63,6 @@ class SuperAdminDashBord(APIView):
         for shop_category_query in ShopCategorys.objects.all():
             shop_category_query_list_result[f"{shop_category_query.shop_category_name}"] = ShopDetails.objects.filter(shop_category=shop_category_query.id).count()
         return Response({"result":shop_category_query_list_result,"graph":"this graph is check how many user under the shopcategory"},status=status.HTTP_200_OK)
-
-
-
-class ShopBlcokUnblock(APIView):
-    '''
-    superadmin can block shop account 
-    '''
-    permission_classes=[CustomAdminPermission]
-
-    def patch(self, request, *args, **kwargs):
-        try:
-            shop_query = ShopDetails.objects.get(id=kwargs['shopid'])
-        except ShopDetails.DoesNotExist:
-            return Response({'error':f'{kwargs["shopid"]} is not valid'},status=status.HTTP_404_NOT_FOUND)
-        
-        if shop_query.is_active:
-            shop_query.is_active=False
-            shop_query.save()
-            return Response({'response':f'{shop_query.username} is blocked'},status=status.HTTP_200_OK)
-        shop_query.is_active=True
-        shop_query.save()
-        return Response({'response':f'{shop_query.username} is Unblocked'},status=status.HTTP_200_OK)
 
 
 
@@ -211,13 +190,13 @@ class RegistrationOtpConfirm(APIView):
         shopcategory = ShopCategorys.objects.get(id=request.session.get('shop_category'))
         
         shop = ShopDetails.objects.create(
-                username = request.session.get('username',None),
-                password = make_password(request.session.get('password',None)),
-                email = request.session.get('email',None),
-                place = request.session.get('place',None),
-                address = request.session.get('address',None),
-                ownername = request.session.get('ownername',None),
-                phone_number = request.session.get('phone_number',None),
+                username = request.session.get('username'),
+                password = make_password(request.session.get('password')),
+                email = request.session.get('email'),
+                place = request.session.get('place'),
+                address = request.session.get('address'),
+                ownername = request.session.get('ownername'),
+                phone_number = request.session.get('phone_number'),
                 shop_category = shopcategory,
                 role = 'shopadmin',
         )
@@ -230,23 +209,19 @@ class RegistrationOtpConfirm(APIView):
 class ShopsDetailsEdit(APIView):
     permission_classes = [CustomAdminPermission]
     def patch(self, request, *args, **kwargs):
-        shop_block_query_param = request.query_params.get('block')
-        print(type(shop_block_query_param))
-        if shop_block_query_param == "True":
-            try:
-                shop = ShopDetails.objects.get(id=kwargs['shopid'])
-            except ShopDetails.DoesNotExist:
-                return Response({"error":f"{kwargs['shopid']} is not valid"})
-            if shop.is_active:
-                shop.is_active = False
-                shop.save()
-                return Response({"result":f"{shop.username} is Block"})
-            shop.is_active = True
+        try:
+            shop = ShopDetails.objects.get(id=kwargs['shopid'])
+        except ShopDetails.DoesNotExist:
+            return Response({"error":f"{kwargs['shopid']} is not valid"})
+        if shop.is_active:
+            shop.is_active = False
             shop.save()
-            return Response({"result":f"{shop.username} is UnBlock"})
-        elif shop_block_query_param != True:
-            return Response({"error":"Invalid query param"})
-        
+            return Response({"result":f"{shop.username} is Block"})
+        shop.is_active = True
+        shop.save()
+        return Response({"result":f"{shop.username} is UnBlock"})
+    
+    
 
     def delete(self, request, *args, **kwargs):
         try:

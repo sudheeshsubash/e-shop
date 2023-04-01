@@ -2,11 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from superadmin.tokengeneratedecode import get_decoded_payload,get_tokens_for_user,check_jwt_user_id_kwargs_id
 from superadmin.custompermissions import CustomShopAdminPermission
-from .serializers import ShopCategoryOrMagerCategorySerializer,RegistrationShopDetailsSerializer,EditProductCategorySerializer,ShopStaffSerializer
-from .serializers import RegistrationShopDetailsOtpConfirmationSerializer,ProductCategorySerializer,AddProductCategorySerializer,StaffRegistrationSerializer
+from .serializers import EditProductCategorySerializer,ShopStaffSerializer
+from .serializers import ProductCategorySerializer,AddProductCategorySerializer,StaffRegistrationSerializer
 from superadmin.models import ShopCategorys,ShopDetails,ProductsCategorys,ShopStaff,CustomUser
 from superadmin.otps import otp
-from django.contrib.auth.hashers import make_password
+from rest_framework.decorators import permission_classes
 from django.db.models import Q
 from superadmin.serializers import LoginSerializer
 from django.contrib.auth import authenticate,login,logout
@@ -22,11 +22,9 @@ class StaffRegistrationView(APIView):
         registration_form_data = StaffRegistrationSerializer(data=request.data)
         if registration_form_data.is_valid(raise_exception=True):
             staff_query = registration_form_data.save()
-            staff = CustomUser.objects.get(username=staff_query)
-            print(staff.id)
-            # ShopStaff.objects.create(
-            #     shop = staff_query.id
-            # )
+            shop_details_query = ShopDetails.objects.get(id=kwargs['shopid'])
+            staff_query.shop_id = shop_details_query.id
+            staff_query.save()
             return Response({"result":"New staff created"},status=status.HTTP_201_CREATED)
 
 
@@ -47,7 +45,7 @@ class ShopStaffEdit(APIView):
 
     def patch(self, request, *args, **kwargs):
         try:
-            shop_details = ShopStaff.objects.get(id=kwargs['staffid'])
+            shop_details = CustomUser.objects.get(id=kwargs['staffid'])
         except ShopStaff.DoesNotExist:
             return Response({"error":"staff is not exist"})
         if shop_details.is_active:
@@ -60,7 +58,15 @@ class ShopStaffEdit(APIView):
 
 
     def put(self, request, *args, **kwargs):
-        pass
+        try:
+            shop_details = ShopStaff.objects.get(id=kwargs['staffid'])
+        except ShopStaff.DoesNotExist:
+            return Response({"error":"staff is not exist"})
+        shop_details_serializer = ShopStaffSerializer(shop_details,data=request.data)
+        if shop_details_serializer.is_valid(raise_exception=True):
+            shop_details_serializer.save()
+            return Response({"result":shop_details_serializer.data})
+        
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -88,19 +94,32 @@ class ShopAdminLogin(APIView):
     '''
     shop admin login
     '''
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         login_serializer_data = LoginSerializer(request.data)
         if login_serializer_data.validate():
             username = login_serializer_data.data.get('username')
             password = login_serializer_data.data.get('password')
             users = authenticate(username=username,password=password)
+            print(users)
             if users is not None:
                 if users.id == kwargs['shopid']:
                     token = get_tokens_for_user(user=users)
                     login(request,users)
                     return Response({'token':token},status=status.HTTP_200_OK)
+                return Response({"error":f"{kwargs['shopid']} is not valid"})
             return Response({'error':f'username and password is not correct'},status=status.HTTP_401_UNAUTHORIZED)
 
+
+    @permission_classes([CustomShopAdminPermission])
+    def delete(self, request, *args, **kwargs):
+        '''
+        loogout
+        ''' 
+        if request.user.is_authenticated:
+            logout(request=request)
+            return Response({'logout successfuly'},status=status.HTTP_200_OK)
+        return Response({'login':'pass the jwt token'},status=status.HTTP_204_NO_CONTENT)
+        
 
 
 class ViewAllProductCategoryGlobelAndCustomCategorys(APIView):
