@@ -92,3 +92,8 @@ class ShopProductSerializer(serializers.ModelSerializer):
         ]
 
 
+
+class ShopProductStockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopProducts
+        fields = ['name','stock']

@@ -77,8 +77,26 @@ class ShopStaffSerializer(serializers.ModelSerializer):
     '''
     class Meta:
         model = ShopStaff
-        fields = ['username','shop','phone_number']
+        fields = ['username','phone_number','email']
 
+    def validate(self, attrs):
+        validationerror = dict()
+        if not re.match(r"^[a-zA-Z]{1}[a-zA-Z0-9\s]+$",attrs.get('username')):
+            validationerror['username']={f"{attrs.get('username')}":'Enter a valid username. This value may contain only letters'}
+        
+        try:
+            if not re.match("^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,3})$",attrs.get('email')):
+                validationerror['email'] = {f"{attrs.get('email')}":'Enter a valid email.'}
+
+            if len(str(attrs.get('phone_number'))) != 10:
+                validationerror['phon_number'] = {f'{attrs.get("phone_number")}':'Enter a valid phone_number. This value may contain 10 length.'}
+        except:
+            pass
+        
+        if len(validationerror) != 0:
+            raise serializers.ValidationError(validationerror)
+
+        return attrs
 
 
 
@@ -190,3 +208,10 @@ class EditProductCategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error":'Enter a valid product_category_name. This value may contain only letters','length':"Four letter to twenty letter"})
 
         return attrs
+    
+
+
+class ShopStaffViewSerilaizer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopStaff
+        fields = ['username','phone_number','email']
