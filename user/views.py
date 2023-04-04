@@ -137,7 +137,7 @@ class ViewProductsDetails(APIView):
     def get(self, request, *args, **kwargs):
         user_id_from_jwttoken = get_decoded_payload(request)
 
-        product_details_query = ShopProducts.objects.filter(id=user_id_from_jwttoken['user_id'])
+        product_details_query = ShopProducts.objects.filter(shop=kwargs['shopid'],id=kwargs['productid'])
         if not product_details_query:
             return Response({"error":"product is not exist"})
         product_details_serializer = ViewProductSerializer(product_details_query,many=True)
@@ -202,7 +202,7 @@ class UserAddProductToCart(APIView):
 
 class QuantityDelete(APIView):
     '''
-    
+    cart product quantity increse or decrese
     '''
     permission_classes = [CustomEndUserPermission]
 
@@ -213,7 +213,7 @@ class QuantityDelete(APIView):
         type = request.query_params.get('type')
         # cartid = request.query_params.get('cartid')
         if  type is None:
-            return Response({'error':'query params is needed "type"'})
+            return Response({'error':{'Params':'type=increse or type=decrese'}})
         if str(type) == 'increse':
             cart = UserCartSerializer(request.data)
             quantity = cart.increse_quantity(cart_id=kwargs['cartid'])
