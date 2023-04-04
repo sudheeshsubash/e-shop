@@ -22,11 +22,12 @@ class UserRegistration(APIView):
     '''
     def get(self, request, *args, **kwargs):
         result = dict()
-        result['username']=''
-        result['phone_number']=''
-        result['password']=''
-        result['confirm_password']=''
-        return Response(result)
+        result['username']='required field'
+        result['phone_number']='required field'
+        result['password']='required field'
+        result['confirm_password']='required field'
+        return Response({"result":result})
+
 
     def post(self, request, *args, **kwargs):
         registration_form_data_serializer = RegistrationUserSerializer(data=request.data)
@@ -37,7 +38,6 @@ class UserRegistration(APIView):
             request.session['password'] = registration_form_data_serializer.data.get('password')
             request.session['phone_number'] = registration_form_data_serializer.data.get('phone_number')
             request.session['otpnumber'] = otpnumber()
-
             return Response({"otp":f'otp sended to your phone'})
             
 
@@ -72,7 +72,6 @@ class RegistrationOtpConfirm(APIView):
 
 
 
-
 class LoginUser(APIView):
 
     def get(self, request, *args, **kwargs):
@@ -93,7 +92,6 @@ class LoginUser(APIView):
             return Response({'error':f'{username} and {password} is not correct'},status=status.HTTP_401_UNAUTHORIZED)
 
 
-    
 
 class UserProductFilter(filters.FilterSet):
     '''

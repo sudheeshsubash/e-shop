@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from superadmin.models import CustomUser,EndUserCart,ShopProducts,EndUserWishlist,UsersDetails
 import re
-from rest_framework.response import Response
 
 
 

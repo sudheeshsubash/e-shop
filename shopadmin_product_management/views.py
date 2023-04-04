@@ -158,6 +158,18 @@ class ShopProductImageEdit(APIView):
 
 
 
+class AddProductImage(APIView):
+
+    permission_classes = [CustomShopAdminPermission]
+
+    def post(self, request, *args, **kwargs):
+        product_image_serializer = ProductImageSerializer(data=request.data)
+        if product_image_serializer.is_valid(raise_exception=True):
+            product_image_serializer.save()
+            return Response({"result":"add new image for products"},status=status.HTTP_200_OK)
+
+
+
 class ViewAllProductStock(APIView):
 
     permission_classes = [CustomShopAdminPermission]
