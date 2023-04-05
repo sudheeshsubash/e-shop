@@ -4,8 +4,11 @@ from . import views
 
 
 urlpatterns = [
-    path('online/',views.OnlinePlaceOrder.as_view()),
-    path('address/',views.AddUserAddress.as_view(),name='address'),
-    path('cash/',views.CashOnPlaceOrder.as_view(),name='cashonplaceorder'),
+    path('choosemethod/',views.ChooseAddressAndPaymentType.as_view(),name='chooseaddress'),
+    path('type/online/',views.PlaceOrderOnlinePurchase.as_view()),
+    path('type/cash/',views.PlaceOrderCashOnPurchase.as_view()),
+    path('address/',views.AddUserAddress.as_view()),
+    path('view/',views.ViewAllOrders.as_view()),
+
     
 ]

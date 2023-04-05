@@ -154,7 +154,7 @@ status_choice = (
 )
 
 payment_choice = (
-    ('cashonhand','Cash On hand'),
+    ('cashondelivery','Cash On Delivery'),
     ('online','Online'),
 )
 
@@ -166,6 +166,7 @@ class EndUserOrders(models.Model):
     shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,related_name='ordershop')
     user = models.ForeignKey("superadmin.CustomUser", on_delete=models.CASCADE,related_name='orederuser')
     staff = models.ForeignKey("superadmin.ShopStaff", on_delete=models.CASCADE,null=True,related_name='orderstaff')
+    address = models.ForeignKey("superadmin.UserAddress", on_delete=models.CASCADE,related_name='useradderss')
     payment_credit = models.IntegerField(null=True)
     payment_debit = models.IntegerField(null=True)
     payment_id = models.CharField(max_length=25,null=True)

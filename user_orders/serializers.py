@@ -1,4 +1,4 @@
-from superadmin.models import UserAddress,UsersDetails,ShopDetails
+from superadmin.models import UserAddress,EndUserOrders,OrderProducts
 from rest_framework import serializers
 import re
 
@@ -20,13 +20,9 @@ class SaveAddressSerializer(serializers.ModelSerializer):
             validation_error['state'] = "state is not valid"
         if validation_error:
             raise serializers.ValidationError(validation_error)
-        return True
-
-
+        return attrs
 
     def save(self, shopid, userid):
-        # user = UsersDetails.objects.get(id=userid)
-        # shop = ShopDetails.objects.get(id=shopid)
         return UserAddress.objects.create(
             address = self.data.get('address'),
             pincode = self.data.get('pincode'),
@@ -35,3 +31,24 @@ class SaveAddressSerializer(serializers.ModelSerializer):
             user_id = userid,
             shop_id = shopid
         )
+
+
+
+class ChoosePaymentAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EndUserOrders
+        fields = ['address','payment_type']
+
+
+
+class AllOrderViewListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EndUserOrders
+        fields = ['id','payment_type','create','total_amount']
+    
+
+class OrderProductsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderProducts
+        fields = ['product_name','product_price','quantity','total']
+
