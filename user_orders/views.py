@@ -238,6 +238,3 @@ class ViewAllOrders(APIView):
             order_products_serializer = OrderProductsSerializer(order_products,many=False)
             order['product'] = order_products_serializer.data
         return pagination.get_paginated_response(order_view_serializer.data)
-
-
-

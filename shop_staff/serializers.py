@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from superadmin.models import OrderProducts,EndUserOrders,ShopStaff
+from superadmin.models import OrderProducts,EndUserOrders,ShopStaff,CustomUser
 import re
 
 
@@ -17,10 +17,23 @@ class OrderProductsSerializer(serializers.ModelSerializer):
 
 
 
-class ChangeStatusSerializer(serializers.Serializer):
+class ChangeStatusSerializer(serializers.ModelSerializer):
+    # payment = serializers.IntegerField()
+    # payment_type = serializers.CharField(max_length=50)
+    class Meta:
+        model = EndUserOrders
+        fields = ['order_status','payment_credit','payment_debit']
 
-    payment = serializers.IntegerField()
-    payment_type = serializers.CharField(max_length=50)
+    def save(self, **kwargs):
+        order = EndUserOrders.objects.get(id=kwargs['orderid'])
+        staff = ShopStaff.objects.get(id=kwargs['staffid'])
+        order.staff_id = staff.id
+        order.payment_credit = self.data.get('payment_credit')
+        # order.payment_debit = self.data.get('payment_debit')
+        order.order_status = self.data.get("order_status")
+        print(self.data.get("order_status"))
+        order.save()
+        return order
 
 
 

@@ -190,3 +190,16 @@ class OrderProducts(models.Model):
     quantity = models.IntegerField()
     total = models.IntegerField()
     discription = models.TextField()
+
+
+
+
+class ProductReview(models.Model):
+    '''
+    product review
+    '''
+    product = models.ForeignKey("superadmin.ShopProducts", on_delete=models.CASCADE,related_name='reviewproduct',null=True)
+    user = models.ForeignKey("superadmin.UsersDetails", on_delete=models.CASCADE,related_name='reviewuser',null=True)
+    shop = models.ForeignKey("superadmin.ShopDetails", on_delete=models.CASCADE,related_name='reviewshop',null=True)
+    message = models.CharField(max_length=200)
+    rate = models.IntegerField()

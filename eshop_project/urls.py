@@ -22,5 +22,6 @@ urlpatterns = [
     path('shop/<int:shopid>/user/details/',include('user_details.urls')),
     path('shop/<int:shopid>/staff/',include('shop_staff.urls')),
     path('details/',include('superadmin_details.urls')),
+    path('shop/<int:shopid>/product/<int:productid>/',include('user_product.urls')),
     
 ]
