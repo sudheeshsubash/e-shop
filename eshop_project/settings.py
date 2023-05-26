@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-mr2mnnt9gb&n0xmzp$9)_4$^x^3be_iztzurh^07+ibh9@#)x&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'superadmin.CustomUser'
 
