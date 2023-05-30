@@ -30,14 +30,14 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
         if login_serializer_data.validate():
             username = login_serializer_data.data.get('username')
             password = login_serializer_data.data.get('password')
-            print(type(username))
+            # print(type(username))
             users = authenticate(username=username,password=password)
             if users is not None:
                 if users.is_superuser:
                     token = get_tokens_for_user(user=users)
                     login(request,users)
-                    return Response({'token':token},status=status.HTTP_200_OK)
-            return Response({'error':f'username and password is not correct'},status=status.HTTP_401_UNAUTHORIZED)
+                    return Response({'status':200,'msg':'successfully login superadmin','tokens':token},status=status.HTTP_200_OK)
+            return Response({'status':401,'msg':f'username or password is not correct'},status=status.HTTP_401_UNAUTHORIZED)
         
 
 
@@ -48,8 +48,8 @@ class LoginSuperAdminEndUserShopAdminShopStaff(APIView):
         '''
         if request.user.is_authenticated:
             logout(request=request)
-            return Response({'logout successfuly'},status=status.HTTP_200_OK)
-        return Response({'login':'pass the jwt token'},status=status.HTTP_204_NO_CONTENT)
+            return Response({'status':200,'msg':'superadmin logout successfuly'},status=status.HTTP_200_OK)
+        return Response({'status':204,"msg": "Authentication credentials were not provided."},status=status.HTTP_204_NO_CONTENT)
         
 
 
@@ -63,7 +63,11 @@ class SuperAdminDashBord(APIView):
         shop_category_query_list_result = dict()
         for shop_category_query in ShopCategorys.objects.all():
             shop_category_query_list_result[f"{shop_category_query.shop_category_name}"] = ShopDetails.objects.filter(shop_category=shop_category_query.id).count()
-        return Response({"result":shop_category_query_list_result,"graph":"this graph is check how many user under the shopcategory"},status=status.HTTP_200_OK)
+        return Response({
+            'status':200,
+            'msg':'dashbord, view all shop category and count of clients','msg2':'this data is for make a graph',
+            "result":shop_category_query_list_result
+            },status=status.HTTP_200_OK)
 
 
 
@@ -86,16 +90,15 @@ class AddShopCategory(APIView):
 
     permission_classes = [CustomAdminPermission]
 
-    def get(self, request, *args, **kwargs):
-        return Response({"shop_category_name":'Enter the category name','discribe':'Discribe that category'},status=status.HTTP_200_OK)
+    # def get(self, request, *args, **kwargs):
+    #     return Response({"shop_category_name":'Enter the category name','discribe':'Discribe that category'},status=status.HTTP_200_OK)
 
 
     def post(self, request, *args, **kwargs):
         category_serializer = MainCategoryShopCategorySerializer(data=request.data)
         if category_serializer.is_valid(raise_exception=True):
             category_serializer.save()
-            category = Response(category_serializer.data).data
-            return Response(category,status=status.HTTP_200_OK)
+            return Response({'status':200,'msg':'successfully shop category created','result':category_serializer.data},status=status.HTTP_200_OK)
 
 
 
@@ -242,13 +245,13 @@ class GlobelShopCategory(APIView):
         if shop:
             product_category = ProductsCategorys.objects.filter(shop=shop)
             if not product_category:
-                return Response({'error':"No Custom product category is available"},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status':400,'msg':"No Custom product category"},status=status.HTTP_400_BAD_REQUEST)
         else:
             product_category = ProductsCategorys.objects.filter(shop__isnull=True)
             if not product_category:
-                return Response({'error':"NO Globel product category"},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status':400,'msg':"NO Globel product category"},status=status.HTTP_400_BAD_REQUEST)
         product_category_serializer = ProductCategorySerializer(product_category,many=True)
-        return Response({"result":product_category_serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':200,'msg':'view all products categorys',"data":product_category_serializer.data},status=status.HTTP_200_OK)
 
 
 
