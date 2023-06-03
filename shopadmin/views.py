@@ -49,6 +49,8 @@ class ShopStaffEdit(APIView):
             shop_details = CustomUser.objects.get(id=kwargs['staffid'])
         except ShopStaff.DoesNotExist:
             return Response({"error":"staff is not exist"},status=status.HTTP_404_NOT_FOUND)
+        if not shop_details.role == 'shopstaff':
+            return Response({"error":"staff is not exist"},status=status.HTTP_404_NOT_FOUND)
         shop_staff_details = ShopStaffViewSerilaizer(shop_details,many=False)
         result = dict()
         result['shop_details'] = shop_staff_details.data
@@ -62,6 +64,8 @@ class ShopStaffEdit(APIView):
             shop_details = CustomUser.objects.get(id=kwargs['staffid'])
         except ShopStaff.DoesNotExist:
             return Response({"error":"staff is not exist"})
+        if not shop_details.role == 'shopstaff':
+            return Response({"error":"staff is not exist"},status=status.HTTP_404_NOT_FOUND)
         if shop_details.is_active:
             shop_details.is_active = False
             shop_details.save()

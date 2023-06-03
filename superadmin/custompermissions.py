@@ -11,6 +11,7 @@ class CustomAdminPermission(BasePermission):
             return bool(request.user and request.user.role == 'admin')
         return False
 
+
     
 class CustomShopAdminPermission(BasePermission):
     '''
